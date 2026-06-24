@@ -42,3 +42,4 @@ docs/demo-script.md
 
 # stray screenshots
 *.png
+.playwright-mcp/
