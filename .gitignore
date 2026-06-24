@@ -39,3 +39,6 @@ docs/demo-script.md
 
 # Commit the circuit artifacts the frontend serves (for Vercel) despite the *.zkey rule above
 !frontend/public/halo_final.zkey
+
+# stray screenshots
+*.png

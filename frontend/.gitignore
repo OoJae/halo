@@ -6,3 +6,4 @@ dist/
 # generated bindings' installed deps
 src/bindings/**/node_modules/
 # halo.wasm + halo_final.zkey ARE committed here (served by Vercel)
+.vercel

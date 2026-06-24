@@ -15,6 +15,10 @@ or identity.
 > Built for **Stellar Hacks: Real-World ZK**. Live on testnet. **The zero-knowledge proof is what
 > makes this possible.**
 
+**▶ Try it live: https://frontend-blush-one-86.vercel.app** — connect Freighter (testnet) or click
+**Use demo wallet**, then prove eligibility and watch a real on-chain attestation appear. Proving runs
+entirely in your browser; no attributes ever leave the device.
+
 ## What the ZK does (and why it's load-bearing)
 
 The Circom/Groth16 circuit (`circuits/halo.circom`, BN254, ~4,500 constraints) proves, **without

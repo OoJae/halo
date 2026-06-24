@@ -1,0 +1,46 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e8]: Halo
+      - generic [ref=e9]: Prove who you're allowed to be — reveal nothing about who you are.
+    - generic [ref=e10]:
+      - button "Connect wallet" [ref=e11] [cursor=pointer]
+      - button "Use demo wallet" [ref=e12] [cursor=pointer]
+  - navigation [ref=e13]:
+    - button "Prove eligibility" [ref=e14] [cursor=pointer]
+    - button "Gated sale" [ref=e15] [cursor=pointer]
+    - button "Demos" [ref=e16] [cursor=pointer]
+    - button "Auditor view-key" [ref=e17] [cursor=pointer]
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - heading "1 Get a credential" [level=2] [ref=e21]:
+          - generic [ref=e22]: "1"
+          - text: Get a credential
+        - paragraph [ref=e23]: A trusted issuer vouches for your attributes once. Your birth year, country, and accreditation never leave your device.
+        - button "Get credential" [ref=e24] [cursor=pointer]
+      - generic [ref=e25]:
+        - heading "2 Prove eligibility" [level=2] [ref=e26]:
+          - generic [ref=e27]: "2"
+          - text: Prove eligibility
+        - paragraph [ref=e28]:
+          - text: Generate a proof
+          - emphasis [ref=e29]: in your browser
+          - text: that you are
+          - strong [ref=e30]: 18+, accredited, and in an allowed region
+          - text: — bound to your wallet. No attributes are revealed.
+        - button "Prove & verify on-chain" [disabled] [ref=e31]
+        - paragraph [ref=e32]: Connect a wallet first.
+      - generic [ref=e33]:
+        - heading "Attestation" [level=2] [ref=e34]
+        - paragraph [ref=e35]: No attestation yet. After proving, the chain records only that your address is verified — nothing about you.
+  - contentinfo [ref=e36]:
+    - paragraph [ref=e37]:
+      - text: Groth16 over BN254 · verified on Stellar testnet ·
+      - strong [ref=e38]: the zero-knowledge proof is what makes this possible.
+    - paragraph [ref=e39]:
+      - link "verifier contract ↗" [ref=e40] [cursor=pointer]:
+        - /url: https://stellar.expert/explorer/testnet/contract/CBXEUMNLBWQEGQDEVFTFD5ZCBZYWVJ2WAW2LLOIVF3Z7YCMPKG2ZNYY6
+      - link "gated-sale contract ↗" [ref=e41] [cursor=pointer]:
+        - /url: https://stellar.expert/explorer/testnet/contract/CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2
+    - paragraph [ref=e42]: Hackathon prototype on testnet — not audited. The mock issuer stands in for a real KYC provider; the auditor view-key is demo-tier (ciphertext not yet bound in-circuit). “Halo” is a product name, not the Halo2 proving system — under the hood it's Groth16 over BN254.
