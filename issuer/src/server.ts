@@ -22,6 +22,10 @@ app.get("/root", (_req, res) => res.json(read("root.json")));
 
 app.get("/credential", (req, res) => {
   const holder = String(req.query.holder || "holderA");
+  // Allowlist the holder id to prevent path traversal into arbitrary files.
+  if (!/^[a-z0-9_-]+$/i.test(holder)) {
+    return res.status(400).json({ error: "invalid holder" });
+  }
   const file = path.join(OUT, `${holder}.json`);
   if (!fs.existsSync(file)) return res.status(404).json({ error: "unknown holder" });
   res.json(read(`${holder}.json`));

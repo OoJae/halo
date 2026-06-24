@@ -78,13 +78,13 @@ Stellar Wallets Kit · **in-browser proving** (snarkjs WASM) · tweetnacl for th
 
 | | |
 |---|---|
-| **halo-verifier** | [`CBXEUMNLBWQEGQDEVFTFD5ZCBZYWVJ2WAW2LLOIVF3Z7YCMPKG2ZNYY6`](https://stellar.expert/explorer/testnet/contract/CBXEUMNLBWQEGQDEVFTFD5ZCBZYWVJ2WAW2LLOIVF3Z7YCMPKG2ZNYY6) |
+| **halo-verifier** | [`CBLHW3IAGUJZ7XCJEAX2XJ3HXBSPATAP747MHTFUPMTITVOXGI2WMQPU`](https://stellar.expert/explorer/testnet/contract/CBLHW3IAGUJZ7XCJEAX2XJ3HXBSPATAP747MHTFUPMTITVOXGI2WMQPU) |
 | **gated-sale** | [`CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2`](https://stellar.expert/explorer/testnet/contract/CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2) |
-| **Example verification tx** (browser-submitted proof) | [`88f8a2e6…574d`](https://stellar.expert/explorer/testnet/tx/88f8a2e6924d9fbd9979ee0c440c75e8e23f83bb4b6fd698a4330bec8f14574d) |
-| Earlier CLI verification tx | [`518cc81f…ea1a4`](https://stellar.expert/explorer/testnet/tx/518cc81f7f6a76fe4d3f2b72d48d7e30c4b8d618557bd5e3774d74c78e9ea1a4) |
+| **Example verification tx** (browser-submitted proof) | [`62bbc7c8…4845`](https://stellar.expert/explorer/testnet/tx/62bbc7c845377ddf8e9ae40ea8ff5d96aa401c481a77494d6e431aa80f1b4845) |
 
-Submitting the same proof again reverts with `Error(Contract, #6)` = `NullifierUsed` — Sybil
-resistance, enforced on-chain.
+Submitting the same proof again reverts with `Error(Contract, #6)` = `NullifierUsed` (Sybil
+resistance); for a gate with a registered policy, a proof carrying a different (trivial) policy reverts
+with `#8` = `PolicyMismatch` — the eligibility gate is enforced on-chain, not just in the UI.
 
 ## Run it
 
@@ -114,9 +114,18 @@ full design and the exact proof/VK byte-encoding spec.
 Hackathon prototype on **testnet — not audited**. The BN254 Groth16 verifier core was hand-ported from
 the merged on-main [`stellar/soroban-examples/groth16_verifier`](https://github.com/stellar/soroban-examples/tree/main/groth16_verifier)
 (BLS12-381) to BN254, cross-checked against the open BN254 PR. The **mock issuer** stands in for a real
-KYC provider. The **auditor view-key is demo-tier**: one attribute is encrypted to the auditor's key
-off-chain, but the ciphertext is not yet bound in-circuit to the proven attribute. The browser submit
-uses Stellar Wallets Kit (Freighter) with a funded-keypair fallback for reliable demos.
+KYC provider, and is trusted for attribute correctness (the circuit now range/boolean-constrains the
+comparator inputs, but a fully-trusted issuer ultimately controls leaf contents). The **gate policy is
+enforced on-chain per scope** via the verifier's policy registry (`set_policy`), so a gate can't be
+satisfied with a self-chosen trivial policy. **Nullifiers** persist ~115 days per write and are
+TTL-bumped; indefinite persistence requires periodic re-bumping (a Soroban state-archival constraint).
+The **auditor view-key is demo-tier**: one attribute is encrypted to the auditor's key off-chain, but
+the ciphertext is not yet bound in-circuit to the proven attribute. The **demo wallet + auditor keys
+are throwaway testnet-only keys** committed for the demo. `npm audit` reports residual advisories in the
+optional wallet-connector dependency tree pulled by Stellar Wallets Kit (the app uses only Freighter +
+a local keypair signer); fully clearing them needs breaking SDK upgrades. **Revocation** (issuer drops a
+leaf + republishes the root) is designed but not yet implemented. The browser submit uses Stellar
+Wallets Kit (Freighter) with a funded-keypair fallback for reliable demos.
 
 ## How Halo is differentiated
 

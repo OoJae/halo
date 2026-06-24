@@ -2,6 +2,7 @@ pragma circom 2.1.6;
 
 include "circomlib/circuits/poseidon.circom";
 include "circomlib/circuits/comparators.circom";
+include "circomlib/circuits/bitify.circom";
 
 // Poseidon Merkle inclusion proof — our own minimal template.
 // Convention: pathIndices[i] == 0  => current node is the LEFT  child at level i
@@ -70,6 +71,15 @@ template Halo(depth) {
         incl.pathIndices[i] <== pathIndices[i];
     }
     incl.root === root;
+
+    // Soundness hardening: range-bind the comparator operands (circomlib LessThan(n) is
+    // only sound for inputs < 2^n) and constrain the accreditation flags to be boolean.
+    component byBits = Num2Bits(16);
+    byBits.in <== birthYear;        // birthYear   < 2^16
+    component mbyBits = Num2Bits(16);
+    mbyBits.in <== minBirthYear;    // minBirthYear < 2^16
+    accredited * (accredited - 1) === 0;             // accredited ∈ {0,1}
+    requireAccredited * (requireAccredited - 1) === 0; // requireAccredited ∈ {0,1}
 
     // 3) age: birthYear <= minBirthYear  (born no later than the cutoff => old enough)
     component ageOk = LessEqThan(16);

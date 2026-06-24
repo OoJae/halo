@@ -120,3 +120,27 @@ fn tampered_signal_is_rejected() {
         _ => {}
     }
 }
+
+#[test]
+fn policy_match_ok() {
+    let env = Env::default();
+    let (client, caller, signals, proof) = setup(&env);
+    let scope = signals.get(2).unwrap();
+    // Register exactly the policy the proof carries (2008/1/643) -> verify passes.
+    client.set_policy(&scope, &u256_dec(&env, "2008"), &u256_dec(&env, "1"), &u256_dec(&env, "643"));
+    client.verify(&caller, &proof, &signals);
+    assert!(client.is_verified(&caller, &scope));
+}
+
+#[test]
+fn policy_mismatch_rejected() {
+    let env = Env::default();
+    let (client, caller, signals, proof) = setup(&env);
+    let scope = signals.get(2).unwrap();
+    // Register a DIFFERENT policy (minBirthYear 1990) -> the proof's 2008 is rejected.
+    client.set_policy(&scope, &u256_dec(&env, "1990"), &u256_dec(&env, "1"), &u256_dec(&env, "643"));
+    assert_eq!(
+        client.try_verify(&caller, &proof, &signals),
+        Err(Ok(Error::PolicyMismatch.into()))
+    );
+}

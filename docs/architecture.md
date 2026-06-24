@@ -37,7 +37,10 @@ Issue once → hold privately → prove in-browser → verify on-chain → gate 
   `MerkleInclusion(16)` template); (2) `birthYear ≤ minBirthYear` (`LessEqThan(16)`); (3)
   `accredited ≥ requireAccredited` (`GreaterEqThan(8)`); (4) `country ≠ bannedCountry` (`IsEqual`);
   (5) `nullifier = Poseidon(secret, scope)`; (6) `addrSq = addr·addr` (keeps the public `addr` constrained).
-- **~4,491 non-linear constraints** → `powersOfTau28_hez_final_14.ptau` (16,384) is ample.
+- **Soundness hardening:** `Num2Bits(16)` range-binds `birthYear`/`minBirthYear` (so `LessEqThan(16)` is
+  sound) and `accredited`/`requireAccredited` are constrained boolean — the gates are correct independent
+  of issuer well-formedness.
+- **~4,525 non-linear constraints** → `powersOfTau28_hez_final_14.ptau` (16,384) is ample.
 - Predicate violations make **witness generation throw** (an `=== 1`/`=== 0` assert fails) — the
   intended "fails" behavior.
 
@@ -57,22 +60,32 @@ Poseidon (verified equal to circomlib via the `poseidon([1,2])` vector).
 ```rust
 initialize(admin)                                  // store admin (instance)
 set_issuer_root(root: U256)                        // admin.require_auth(); store trusted root
+set_policy(scope, minBirthYear, requireAccredited, bannedCountry)  // admin; bind a required policy to a scope
+get_policy(scope) -> Option<Policy>
 verify(caller, proof, public_signals: Vec<U256>)   // the core (below)
 is_verified(who, scope) -> bool                    // attestation lookup (used by gating dApps)
 attested_at(who, scope) -> Option<u32>             // ledger of the attestation
 ```
-`verify` runs: `caller.require_auth()` → `addr` binding check → `root == stored` → `(scope,nullifier)`
-unused → `groth16_verify(embedded VK, proof, signals)` → store nullifier + attestation + emit
-`(halo, verified) = (caller, scope)`. Errors: `3 BadSignals, 4 AddrMismatch, 5 RootMismatch,
-6 NullifierUsed, 7 InvalidProof`.
+`verify` runs: `caller.require_auth()` → `addr` binding check → `root == stored` → **policy check (if a
+policy is registered for `scope`, public signals 3–5 must equal it, else `PolicyMismatch`)** →
+`(scope,nullifier)` unused → `groth16_verify(embedded VK, proof, signals)` → store nullifier +
+attestation + emit `(halo, verified) = (caller, scope)`. Errors: `3 BadSignals, 4 AddrMismatch,
+5 RootMismatch, 6 NullifierUsed, 7 InvalidProof, 8 PolicyMismatch`.
+
+**Policy enforcement (H1):** without a registered policy a scope accepts any (prover-chosen) policy —
+fine for the free-form "prove eligibility" demo (random scopes). The gated sale's `SALE_SCOPE` has a
+registered policy `(2008, 1, 643)`, so unlocking it requires a proof that genuinely satisfies 18+ /
+accredited / not-in-banned-region — a trivial policy reverts `PolicyMismatch`.
 
 - **Embedded VK:** `circuits/scripts/gen-vk-rust.mjs` turns `verification_key.json` into `src/vk.rs`
   (const byte arrays); re-run after any circuit change.
 - **Verify core:** `vk_x = ic[0] + Σ pubᵢ·ic[i+1]`; accept ⇔ `e(-A,B)·e(α,β)·e(vk_x,γ)·e(C,δ) == 1`
   via `env.crypto().bn254().pairing_check`. Hand-ported from the merged on-main `groth16_verifier`
   (BLS12-381 → BN254), cross-checked vs PR #399.
-- **Storage:** `instance` for `Admin`, `IssuerRoot`; `persistent` keyed for `Nullifier(scope, nullifier)`
-  and `Attestation(caller, scope)` (TTL-bumped).
+- **Storage:** `instance` for `Admin`, `IssuerRoot`, `Policy(scope)`; `persistent` keyed for
+  `Nullifier(scope, nullifier)` and `Attestation(caller, scope)`, TTL-bumped ~2M ledgers (~115 days)
+  per write. Indefinite nullifier persistence requires periodic re-bumping (a Soroban state-archival
+  constraint); if a nullifier entry archives, the Sybil guarantee for that `(scope, nullifier)` lapses.
 
 ### `gated-sale` (`contracts/gated-sale`)
 `initialize(admin, verifier, scope)`, `set_verifier(admin)`, `is_open(who)`, `buy(buyer, amount)` →
@@ -119,16 +132,22 @@ circom 2.2.3 · snarkjs 0.7.6 · default curve `bn128 = BN254` · stellar-cli 27
 | What | Value |
 |---|---|
 | Deployer / admin | `GC3ATO6LRJY7T5TN2AE6DJLAMT2JCVLMGI6IXAVPMD5OVGH5ODBQWYLQ` |
-| halo-verifier | `CBXEUMNLBWQEGQDEVFTFD5ZCBZYWVJ2WAW2LLOIVF3Z7YCMPKG2ZNYY6` |
+| halo-verifier (policy-enforcing) | `CBLHW3IAGUJZ7XCJEAX2XJ3HXBSPATAP747MHTFUPMTITVOXGI2WMQPU` |
 | gated-sale (SALE_SCOPE 424242) | `CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2` |
-| verify tx (browser-submitted) | `88f8a2e6924d9fbd9979ee0c440c75e8e23f83bb4b6fd698a4330bec8f14574d` (ledger 3262195) |
-| verify tx (CLI) | `518cc81f7f6a76fe4d3f2b72d48d7e30c4b8d618557bd5e3774d74c78e9ea1a4` (ledger 3260818) |
+| verify tx (browser-submitted) | `62bbc7c845377ddf8e9ae40ea8ff5d96aa401c481a77494d6e431aa80f1b4845` (ledger 3265726) |
 | duplicate submit | reverts `Error(Contract, #6)` = NullifierUsed |
+| trivial policy on a policy-bound scope | reverts `Error(Contract, #8)` = PolicyMismatch |
 
 ## Honest status / known gaps
 
-Testnet, not audited. Mock issuer. The view-key is demo-tier (ciphertext not yet bound in-circuit; the
-sound tier would prove `ciphertext = Encrypt(auditorPubkey, attribute)` in-circuit via ElGamal over
-BabyJubJub). The gate's policy params are chosen by the prover; binding a `scope` to a fixed required
-policy is the gating dApp's responsibility. The demo reuses one issuer tree (holderA/holderB); the sale
-demo is one-shot per `(secret, SALE_SCOPE)`.
+Testnet, not audited. **Issuer trust:** the mock issuer is trusted for attribute correctness — it
+controls leaf contents — so the strongest guarantees sit downstream of a trusted party (the circuit now
+range/boolean-constrains the gates, but a malicious issuer could still commit false attributes).
+**Policy binding (H1):** gate policy is now enforced on-chain per scope via `set_policy`; scopes without
+a registered policy remain free-form. **Nullifiers** persist ~115 days per write (TTL-bumped);
+indefinite persistence needs periodic re-bumping. The **view-key is demo-tier** (ciphertext not yet
+bound in-circuit; the sound tier would prove `ciphertext = Encrypt(auditorPubkey, attribute)` in-circuit
+via ElGamal over BabyJubJub). **Revocation** (drop a leaf + republish root) is designed, not implemented.
+Demo wallet + auditor keys are throwaway **testnet-only** keys. Residual `npm audit` advisories live in
+the optional wallet-connector dep tree (Freighter + local keypair signer are what's used). The demo
+reuses one issuer tree (holderA/holderB); the sale demo is one-shot per `(secret, SALE_SCOPE)`.

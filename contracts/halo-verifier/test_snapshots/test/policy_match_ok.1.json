@@ -33,6 +33,34 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "function_name": "set_policy",
+              "args": [
+                {
+                  "u256": "12345"
+                },
+                {
+                  "u256": "2008"
+                },
+                {
+                  "u256": "1"
+                },
+                {
+                  "u256": "643"
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
+    [
+      [
+        "GC3ATO6LRJY7T5TN2AE6DJLAMT2JCVLMGI6IXAVPMD5OVGH5ODBQWYLQ",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
               "function_name": "verify",
               "args": [
                 {
@@ -120,6 +148,26 @@
               "key": {
                 "ledger_key_nonce": {
                   "nonce": "801925984706572462"
+                }
+              },
+              "durability": "temporary",
+              "val": "void"
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 6311999
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "GC3ATO6LRJY7T5TN2AE6DJLAMT2JCVLMGI6IXAVPMD5OVGH5ODBQWYLQ",
+              "key": {
+                "ledger_key_nonce": {
+                  "nonce": "1033654523790656264"
                 }
               },
               "durability": "temporary",
@@ -247,6 +295,46 @@
                       },
                       "val": {
                         "u256": "10637115566097285013948359968641141560847214974953034324289129493778172433271"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Policy"
+                          },
+                          {
+                            "u256": "12345"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "banned_country"
+                            },
+                            "val": {
+                              "u256": "643"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "min_birth_year"
+                            },
+                            "val": {
+                              "u256": "2008"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "require_accredited"
+                            },
+                            "val": {
+                              "u256": "1"
+                            }
+                          }
+                        ]
                       }
                     }
                   ]

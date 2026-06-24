@@ -9,7 +9,7 @@ import type { Proof } from "../bindings/halo-verifier/src";
 
 export const RPC_URL = "https://soroban-testnet.stellar.org";
 export const PASSPHRASE = Networks.TESTNET;
-export const VERIFIER_ID = "CBXEUMNLBWQEGQDEVFTFD5ZCBZYWVJ2WAW2LLOIVF3Z7YCMPKG2ZNYY6";
+export const VERIFIER_ID = "CBLHW3IAGUJZ7XCJEAX2XJ3HXBSPATAP747MHTFUPMTITVOXGI2WMQPU";
 export const SALE_ID = "CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2";
 export const SALE_SCOPE = "424242";
 export const EXPLORER_TX = (hash: string) => `https://stellar.expert/explorer/testnet/tx/${hash}`;

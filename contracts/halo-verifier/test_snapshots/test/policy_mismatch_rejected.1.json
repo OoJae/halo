@@ -33,63 +33,19 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "verify",
+              "function_name": "set_policy",
               "args": [
                 {
-                  "address": "GC3ATO6LRJY7T5TN2AE6DJLAMT2JCVLMGI6IXAVPMD5OVGH5ODBQWYLQ"
+                  "u256": "12345"
                 },
                 {
-                  "map": [
-                    {
-                      "key": {
-                        "symbol": "a"
-                      },
-                      "val": {
-                        "bytes": "1d9553537459dfcec7f4c7f3c0efcd2c9580c10212164f5fc7ecfd99a207364725430d249914a9d2fa5dc6bfa45ddf76365327d38bbf202fad7756c0527d36a8"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "b"
-                      },
-                      "val": {
-                        "bytes": "1a4b9f4af10b810e076981a30d91139fc74db98cfe2d299317167d6bd224f0320656914a08a6782e04c7db3c91d6807a1a3cfac2d1daac67f28dd1919e3c7f5b24f757aa546863e3e126a848a771224012f4c0255c9b19dd489f8b16cc1e6bc614fb24cbbb5d5123c6d90228dd088cc80b9362cc36fbc413d062548792940af7"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "c"
-                      },
-                      "val": {
-                        "bytes": "0c60b47393770166d241f5fe789a75db8e3ffa80d8809983256510cea2389fa82072646e9f37669f71b109ddffa5944af592cf232746972766804ebf88e6ee35"
-                      }
-                    }
-                  ]
+                  "u256": "1990"
                 },
                 {
-                  "vec": [
-                    {
-                      "u256": "9541436324162441142050679742935915856475030496702647409167701574759117452564"
-                    },
-                    {
-                      "u256": "10637115566097285013948359968641141560847214974953034324289129493778172433271"
-                    },
-                    {
-                      "u256": "12345"
-                    },
-                    {
-                      "u256": "2008"
-                    },
-                    {
-                      "u256": "1"
-                    },
-                    {
-                      "u256": "643"
-                    },
-                    {
-                      "u256": "2375385662865380323693174162482836028103305704748695271614207160101170127138"
-                    }
-                  ]
+                  "u256": "1"
+                },
+                {
+                  "u256": "643"
                 }
               ]
             }
@@ -157,66 +113,6 @@
             "contract_data": {
               "ext": "v0",
               "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "key": {
-                "vec": [
-                  {
-                    "symbol": "Attestation"
-                  },
-                  {
-                    "address": "GC3ATO6LRJY7T5TN2AE6DJLAMT2JCVLMGI6IXAVPMD5OVGH5ODBQWYLQ"
-                  },
-                  {
-                    "u256": "12345"
-                  }
-                ]
-              },
-              "durability": "persistent",
-              "val": {
-                "u32": 0
-              }
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 2000000
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "key": {
-                "vec": [
-                  {
-                    "symbol": "Nullifier"
-                  },
-                  {
-                    "u256": "12345"
-                  },
-                  {
-                    "u256": "9541436324162441142050679742935915856475030496702647409167701574759117452564"
-                  }
-                ]
-              },
-              "durability": "persistent",
-              "val": {
-                "bool": true
-              }
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 2000000
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
               "key": "ledger_key_contract_instance",
               "durability": "persistent",
               "val": {
@@ -247,6 +143,46 @@
                       },
                       "val": {
                         "u256": "10637115566097285013948359968641141560847214974953034324289129493778172433271"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Policy"
+                          },
+                          {
+                            "u256": "12345"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "banned_country"
+                            },
+                            "val": {
+                              "u256": "643"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "min_birth_year"
+                            },
+                            "val": {
+                              "u256": "1990"
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "require_accredited"
+                            },
+                            "val": {
+                              "u256": "1"
+                            }
+                          }
+                        ]
                       }
                     }
                   ]

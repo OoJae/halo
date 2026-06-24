@@ -38,11 +38,21 @@ pub struct Proof {
     pub c: Bn254G1Affine,
 }
 
+/// Required eligibility policy a scope's proofs must satisfy (public signals 3..5).
+#[derive(Clone)]
+#[contracttype]
+pub struct Policy {
+    pub min_birth_year: U256,
+    pub require_accredited: U256,
+    pub banned_country: U256,
+}
+
 #[contracttype]
 pub enum DataKey {
     Admin,
     IssuerRoot,
-    Nullifier(U256, U256), // (scope, nullifier)
+    Policy(U256),               // scope -> required gate policy (optional)
+    Nullifier(U256, U256),      // (scope, nullifier)
     Attestation(Address, U256), // (caller, scope) -> ledger sequence
 }
 
@@ -57,10 +67,14 @@ pub enum Error {
     RootMismatch = 5,
     NullifierUsed = 6,
     InvalidProof = 7,
+    PolicyMismatch = 8,
 }
 
 const BUMP_THRESHOLD: u32 = 100_000;
-const BUMP_EXTEND: u32 = 1_000_000;
+// ~115 days at ~5s/ledger; safely under the network persistent max_entry_ttl. Nullifiers
+// are bumped on write — indefinite persistence would require periodic re-bumping (a
+// Soroban state-archival constraint, documented in docs/architecture.md).
+const BUMP_EXTEND: u32 = 2_000_000;
 
 #[contract]
 pub struct HaloVerifier;
@@ -86,6 +100,33 @@ impl HaloVerifier {
         store.set(&DataKey::IssuerRoot, &root);
         store.extend_ttl(BUMP_THRESHOLD, BUMP_EXTEND);
         Ok(())
+    }
+
+    /// Admin-only: bind a required eligibility policy to a `scope`. Once set, `verify`
+    /// enforces that proofs for this scope carry exactly these public policy params, so a
+    /// prover cannot satisfy a gate with a self-chosen trivial policy. Scopes with no
+    /// registered policy accept any policy (free-form attestation).
+    pub fn set_policy(
+        env: Env,
+        scope: U256,
+        min_birth_year: U256,
+        require_accredited: U256,
+        banned_country: U256,
+    ) -> Result<(), Error> {
+        let store = env.storage().instance();
+        let admin: Address = store.get(&DataKey::Admin).ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        store.set(
+            &DataKey::Policy(scope),
+            &Policy { min_birth_year, require_accredited, banned_country },
+        );
+        store.extend_ttl(BUMP_THRESHOLD, BUMP_EXTEND);
+        Ok(())
+    }
+
+    /// The policy bound to a scope, if any.
+    pub fn get_policy(env: Env, scope: U256) -> Option<Policy> {
+        env.storage().instance().get(&DataKey::Policy(scope))
     }
 
     /// Verify a Halo proof and record an attestation bound to `caller`.
@@ -116,6 +157,21 @@ impl HaloVerifier {
         let stored_root: U256 = store.get(&DataKey::IssuerRoot).ok_or(Error::NotInitialized)?;
         if root != stored_root {
             return Err(Error::RootMismatch);
+        }
+
+        // 2b) Policy binding: if a policy is registered for this scope, the proof's public
+        // policy params must match it exactly (so a gate can't be satisfied with a trivial,
+        // prover-chosen policy). Unregistered scopes accept any policy.
+        if let Some(p) = store.get::<DataKey, Policy>(&DataKey::Policy(scope.clone())) {
+            let min_birth_year = public_signals.get(3).unwrap();
+            let require_accredited = public_signals.get(4).unwrap();
+            let banned_country = public_signals.get(5).unwrap();
+            if min_birth_year != p.min_birth_year
+                || require_accredited != p.require_accredited
+                || banned_country != p.banned_country
+            {
+                return Err(Error::PolicyMismatch);
+            }
         }
 
         // 3) Sybil resistance: reject a reused (scope, nullifier).
@@ -165,7 +221,7 @@ impl HaloVerifier {
 fn addr_field(env: &Env, caller: &Address) -> U256 {
     let s = caller.to_string();
     let len = s.len() as usize;
-    let mut buf = [0u8; 56];
+    let mut buf = [0u8; 69]; // strkey: 56 for G/C accounts, up to 69 for muxed M-addresses
     s.copy_into_slice(&mut buf[..len]);
     let bytes = Bytes::from_slice(env, &buf[..len]);
     let mut hb = [0u8; 32];
