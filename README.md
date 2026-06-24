@@ -15,7 +15,7 @@ or identity.
 > Built for **Stellar Hacks: Real-World ZK**. Live on testnet. **The zero-knowledge proof is what
 > makes this possible.**
 
-**▶ Try it live: https://frontend-blush-one-86.vercel.app** — connect Freighter (testnet) or click
+**▶ Try it live: https://halo-zk.vercel.app** — connect Freighter (testnet) or click
 **Use demo wallet**, then prove eligibility and watch a real on-chain attestation appear. Proving runs
 entirely in your browser; no attributes ever leave the device.
 
