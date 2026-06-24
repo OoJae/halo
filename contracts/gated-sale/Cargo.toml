@@ -1,0 +1,30 @@
+[package]
+name = "gated-sale"
+version = "0.1.0"
+edition = "2021"
+publish = false
+rust-version = "1.92.0"
+
+# A minimal "regulated token sale" demo contract: `buy` only proceeds if the buyer
+# holds a Halo attestation for the sale scope, checked via a cross-contract call to
+# the halo-verifier's `is_verified`.
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { version = "25.0.2" }
+
+[dev-dependencies]
+soroban-sdk = { version = "25.0.2", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true

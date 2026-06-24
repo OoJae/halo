@@ -1,0 +1,41 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Rust / Soroban
+target/
+**/target/
+
+# Circom / snarkjs build artifacts (large; regenerate via scripts)
+circuits/build/
+*.ptau
+*.zkey
+*.wtns
+*.r1cs
+*.sym
+# keep the small, reusable verification key and sample proof
+!circuits/build/verification_key.json
+
+# Issuer output (regeneratable; contains mock credential secrets)
+issuer/out/
+# Generated prover input
+circuits/input.halo.json
+
+# Stellar keys / secrets — never commit
+.env
+.env.*
+*.secret
+
+# OS
+.DS_Store
+
+# Internal — not public-facing
+PROGRESS.md
+Halo-Build-Guide.md
+Halo-ClaudeCode-Master-Prompt.md
+Stellar-ZK-Research.md
+docs/SUBMISSION.md
+docs/demo-script.md
+
+# Commit the circuit artifacts the frontend serves (for Vercel) despite the *.zkey rule above
+!frontend/public/halo_final.zkey

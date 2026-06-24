@@ -1,0 +1,21 @@
+{
+  "name": "halo-issuer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Halo mock issuer: builds the Poseidon Merkle tree and issues credentials",
+  "scripts": {
+    "issue": "tsx src/issue.ts",
+    "serve": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^16.0.1",
+    "circomlibjs": "^0.1.7",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

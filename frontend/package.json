@@ -1,0 +1,28 @@
+{
+  "name": "halo-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "@creit.tech/stellar-wallets-kit": "^2.4.0",
+    "@stellar/stellar-sdk": "^16.0.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "snarkjs": "^0.7.6",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.0",
+    "vite-plugin-node-polyfills": "^0.28.0"
+  }
+}
