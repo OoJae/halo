@@ -7,7 +7,7 @@ use soroban_sdk::{
 
 use crate::{Error, GatedSale, GatedSaleClient};
 
-// A controllable mock of the halo-verifier's `is_verified`, to test the gate without proofs.
+// A controllable mock of the halo-verifier's `is_verified_for`, to test the gate without proofs.
 #[contract]
 pub struct MockVerifier;
 
@@ -16,7 +16,14 @@ impl MockVerifier {
     pub fn set_verified(env: Env, v: bool) {
         env.storage().instance().set(&symbol_short!("v"), &v);
     }
-    pub fn is_verified(env: Env, _who: Address, _scope: U256) -> bool {
+    pub fn is_verified_for(
+        env: Env,
+        _who: Address,
+        _scope: U256,
+        _min_birth_year: U256,
+        _require_accredited: U256,
+        _banned_country: U256,
+    ) -> bool {
         env.storage().instance().get(&symbol_short!("v")).unwrap_or(false)
     }
 }
@@ -35,7 +42,8 @@ fn buy_is_gated_by_verification() {
     let admin = Address::generate(&env);
     let buyer = Address::generate(&env);
     let scope = U256::from_u32(&env, 777);
-    sale.initialize(&admin, &verifier_id, &scope);
+    let u = |n: u32| U256::from_u32(&env, n);
+    sale.initialize(&admin, &verifier_id, &scope, &u(2008), &u(1), &u(643));
 
     // Not verified -> buy reverts, sale closed.
     mock.set_verified(&false);

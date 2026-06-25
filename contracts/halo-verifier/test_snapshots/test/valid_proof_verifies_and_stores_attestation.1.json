@@ -173,7 +173,40 @@
               },
               "durability": "persistent",
               "val": {
-                "u32": 0
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "banned_country"
+                    },
+                    "val": {
+                      "u256": "643"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "ledger"
+                    },
+                    "val": {
+                      "u32": 0
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "min_birth_year"
+                    },
+                    "val": {
+                      "u256": "2008"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "require_accredited"
+                    },
+                    "val": {
+                      "u256": "1"
+                    }
+                  }
+                ]
               }
             }
           },

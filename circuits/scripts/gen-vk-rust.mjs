@@ -14,6 +14,13 @@ const toArr = (hex) => {
   return "[" + bytes.join(", ") + "]";
 };
 
+// Guard against a VK/circuit mismatch (halo.circom has 7 public signals → IC = nPublic + 1 = 8).
+// If the circuit's public-signal count changes, update EXPECTED_IC deliberately.
+const EXPECTED_IC = 8;
+if (vk.ic.length !== EXPECTED_IC) {
+  throw new Error(`VK IC length ${vk.ic.length} != expected ${EXPECTED_IC} — regenerated from the wrong circuit?`);
+}
+
 const ic = vk.ic.map(toArr);
 const out = `// AUTO-GENERATED from circuits/build/soroban/vk.json by gen-vk-rust.mjs.
 // Do not edit by hand; re-run the generator after changing the circuit.

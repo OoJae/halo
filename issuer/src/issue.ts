@@ -14,6 +14,10 @@ const OUT = path.join(__dirname, "..", "out");
 
 // Demo holders. holderA is accredited; holderB is NOT (so the test harness can
 // isolate the accreditation predicate from the membership check).
+// NOTE: these `secret` values are FIXED (low-entropy) on purpose, so the published Merkle root
+// is reproducible and the committed demo credential matches the deployed verifier. A real issuer
+// MUST draw each holder's secret from a CSPRNG (256-bit, reduced mod r) — never hardcode or commit
+// holder secrets. The demo credential is a deliberately-shared public artifact, not a real secret.
 const HOLDERS = [
   { name: "holderA", birthYear: 2000n, country: 840n, accredited: 1n, secret: 8675309000000001n },
   { name: "holderB", birthYear: 1995n, country: 840n, accredited: 0n, secret: 8675309000000002n },

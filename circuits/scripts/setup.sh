@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."   # -> circuits/
 
-CIRCUIT="${1:-mul}"
+CIRCUIT="${1:-halo}"
 PTAU="powersOfTau28_hez_final_14.ptau"
 PTAU_URL="https://storage.googleapis.com/zkevm/ptau/${PTAU}"
 

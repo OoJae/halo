@@ -144,3 +144,29 @@ fn policy_mismatch_rejected() {
         Err(Ok(Error::PolicyMismatch.into()))
     );
 }
+
+#[test]
+fn is_verified_for_checks_proven_policy() {
+    let env = Env::default();
+    let (client, caller, signals, proof) = setup(&env);
+    let scope = signals.get(2).unwrap();
+    client.verify(&caller, &proof, &signals); // proves policy 2008/1/643 (scope unregistered → free-form)
+    // a gate requiring exactly what was proven -> true
+    assert!(client.is_verified_for(&caller, &scope, &u256_dec(&env, "2008"), &u256_dec(&env, "1"), &u256_dec(&env, "643")));
+    // a gate requiring a DIFFERENT (stricter) policy than was proven -> false: a trivial-policy
+    // attestation can't satisfy a real-policy gate, even on an unregistered scope.
+    assert!(!client.is_verified_for(&caller, &scope, &u256_dec(&env, "1990"), &u256_dec(&env, "1"), &u256_dec(&env, "643")));
+    assert!(client.is_verified(&caller, &scope)); // bare existence still true
+}
+
+#[test]
+fn double_initialize_rejected() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let client = HaloVerifierClient::new(&env, &env.register(HaloVerifier {}, ()));
+    client.initialize(&deployer(&env));
+    assert_eq!(
+        client.try_initialize(&deployer(&env)),
+        Err(Ok(Error::AlreadyInitialized.into()))
+    );
+}

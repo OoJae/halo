@@ -47,6 +47,17 @@ pub struct Policy {
     pub banned_country: U256,
 }
 
+/// An attestation records the ledger AND the exact policy the proof satisfied, so a gating
+/// dApp can verify *what* was proven (via `is_verified_for`), not merely *that* something was.
+#[derive(Clone)]
+#[contracttype]
+pub struct Attestation {
+    pub ledger: u32,
+    pub min_birth_year: U256,
+    pub require_accredited: U256,
+    pub banned_country: U256,
+}
+
 #[contracttype]
 pub enum DataKey {
     Admin,
@@ -144,6 +155,9 @@ impl HaloVerifier {
         let nullifier = public_signals.get(0).unwrap();
         let root = public_signals.get(1).unwrap();
         let scope = public_signals.get(2).unwrap();
+        let min_birth_year = public_signals.get(3).unwrap();
+        let require_accredited = public_signals.get(4).unwrap();
+        let banned_country = public_signals.get(5).unwrap();
         let addr = public_signals.get(6).unwrap();
 
         // 1) Anti-replay: the proof's bound address must match the caller.
@@ -163,9 +177,6 @@ impl HaloVerifier {
         // policy params must match it exactly (so a gate can't be satisfied with a trivial,
         // prover-chosen policy). Unregistered scopes accept any policy.
         if let Some(p) = store.get::<DataKey, Policy>(&DataKey::Policy(scope.clone())) {
-            let min_birth_year = public_signals.get(3).unwrap();
-            let require_accredited = public_signals.get(4).unwrap();
-            let banned_country = public_signals.get(5).unwrap();
             if min_birth_year != p.min_birth_year
                 || require_accredited != p.require_accredited
                 || banned_country != p.banned_country
@@ -190,29 +201,64 @@ impl HaloVerifier {
             return Err(Error::InvalidProof);
         }
 
-        // 5) Commit: mark nullifier used, store attestation, emit event.
+        // 5) Commit: mark nullifier used, store the attestation WITH the proven policy, emit event.
         persistent.set(&nk, &true);
         persistent.extend_ttl(&nk, BUMP_THRESHOLD, BUMP_EXTEND);
         let ak = DataKey::Attestation(caller.clone(), scope.clone());
-        persistent.set(&ak, &env.ledger().sequence());
+        persistent.set(
+            &ak,
+            &Attestation {
+                ledger: env.ledger().sequence(),
+                min_birth_year,
+                require_accredited,
+                banned_country,
+            },
+        );
         persistent.extend_ttl(&ak, BUMP_THRESHOLD, BUMP_EXTEND);
+        store.extend_ttl(BUMP_THRESHOLD, BUMP_EXTEND); // keep Admin/IssuerRoot/Policy live
         env.events()
             .publish((symbol_short!("halo"), symbol_short!("verified")), (caller, scope));
         Ok(())
     }
 
-    /// True if `who` holds an attestation for `scope` (used by gating dApps).
+    /// True if `who` holds any attestation for `scope`.
     pub fn is_verified(env: Env, who: Address, scope: U256) -> bool {
         env.storage()
             .persistent()
             .has(&DataKey::Attestation(who, scope))
     }
 
+    /// True if `who` holds an attestation for `scope` that satisfied EXACTLY this policy. Gating
+    /// dApps should use this (not `is_verified`) so a gate can't be satisfied with a trivial,
+    /// prover-chosen policy — even on scopes with no registered policy.
+    pub fn is_verified_for(
+        env: Env,
+        who: Address,
+        scope: U256,
+        min_birth_year: U256,
+        require_accredited: U256,
+        banned_country: U256,
+    ) -> bool {
+        match env
+            .storage()
+            .persistent()
+            .get::<DataKey, Attestation>(&DataKey::Attestation(who, scope))
+        {
+            Some(a) => {
+                a.min_birth_year == min_birth_year
+                    && a.require_accredited == require_accredited
+                    && a.banned_country == banned_country
+            }
+            None => false,
+        }
+    }
+
     /// The ledger at which `who` was attested for `scope`, if any.
     pub fn attested_at(env: Env, who: Address, scope: U256) -> Option<u32> {
         env.storage()
             .persistent()
-            .get(&DataKey::Attestation(who, scope))
+            .get::<DataKey, Attestation>(&DataKey::Attestation(who, scope))
+            .map(|a| a.ledger)
     }
 }
 

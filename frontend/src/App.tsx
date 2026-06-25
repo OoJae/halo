@@ -15,6 +15,14 @@ const freshScope = () => {
   return (BigInt(a[0]) * 4294967296n + BigInt(a[1])).toString();
 };
 const isNullifierUsed = (e: any) => /#6\b|NullifierUsed/i.test(String(e?.message ?? e));
+const decodeError = (e: any) => {
+  const m = String(e?.message ?? e);
+  if (isNullifierUsed(e)) return "Already verified for this scope — the nullifier is spent (one person, one action).";
+  if (/#8\b|PolicyMismatch/i.test(m)) return "This gate requires a specific eligibility policy; your proof's policy doesn't match it.";
+  if (/#4\b|AddrMismatch/i.test(m)) return "The proof isn't bound to the connected wallet.";
+  if (/#5\b|RootMismatch/i.test(m)) return "The proof's issuer root doesn't match the on-chain root.";
+  return m.length > 160 ? m.slice(0, 160) + "…" : m;
+};
 const POLICY: Omit<Gate, "scope"> = { minBirthYear: "2008", requireAccredited: "1", bannedCountry: "643" };
 const COUNTRY_NAMES: Record<string, string> = { "840": "United States", "643": "Russia", "364": "Iran" };
 
@@ -74,7 +82,7 @@ export default function App() {
       setAtt({ ledger, nullifier: res.nullifier, hash });
       return res;
     } catch (e: any) {
-      setError(e?.message ?? "Proof submission failed");
+      setError(decodeError(e));
       throw e;
     } finally { setBusy(""); }
   }
@@ -159,7 +167,7 @@ function IdentityTab(p: any) {
 
       <section className="card">
         <h2><span className="step">2</span> Prove eligibility</h2>
-        <p className="muted">Generate a proof <em>in your browser</em> that you are <strong>18+, accredited, and in an allowed region</strong> — bound to your wallet. No attributes are revealed.</p>
+        <p className="muted">Generate a proof <em>in your browser</em> that you are <strong>18+, accredited, and not in a banned country</strong> — bound to your wallet. No attributes are revealed.</p>
         <button className="btn primary" disabled={!address || !cred || busy} onClick={run}>Prove &amp; verify on-chain</button>
         {!address && <p className="hint">Connect a wallet first.</p>}
       </section>

@@ -105,7 +105,9 @@ template Halo(depth) {
     nh.inputs[1] <== scope;
     nullifier <== nh.out;
 
-    // 7) bind caller address into the proof (anti-replay): keep `addr` constrained
+    // 7) addr is a public input committed by the proof; the actual anti-replay binding
+    //    (addr == sha256(caller)) is enforced ON-CHAIN in halo-verifier::verify. addrSq just
+    //    keeps `addr` inside the constraint system so it can't be dropped/altered.
     signal addrSq;
     addrSq <== addr * addr;
 }

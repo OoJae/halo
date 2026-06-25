@@ -27,7 +27,17 @@ echo "==> set_issuer_root($ROOT) ..."
 stellar contract invoke --id "$CID" --source "$SOURCE" --network "$NETWORK" \
   -- set_issuer_root --root "$ROOT" >/dev/null
 
-echo "==> Done. Verifier deployed + initialized."
+# Register the eligibility policy for the gated-sale scope so the gate is actually enforced
+# on-chain (otherwise an unregistered scope accepts any prover-chosen policy).
+SALE_SCOPE="${SALE_SCOPE:-424242}"
+echo "==> set_policy(scope=$SALE_SCOPE, minBirthYear=2008, requireAccredited=1, bannedCountry=643) ..."
+stellar contract invoke --id "$CID" --source "$SOURCE" --network "$NETWORK" \
+  -- set_policy --scope "$SALE_SCOPE" --min_birth_year 2008 --require_accredited 1 --banned_country 643 >/dev/null
+echo "==> get_policy($SALE_SCOPE) readback:"
+stellar contract invoke --id "$CID" --source "$SOURCE" --network "$NETWORK" -- get_policy --scope "$SALE_SCOPE"
+
+echo "==> Done. Verifier deployed + initialized + policy registered."
+echo "    Next: ./scripts/deploy-gated-sale.sh $CID   (deploys + wires the gated-sale demo)"
 echo "    HALO_VERIFIER_ID=$CID"
 echo
 echo "To verify a holder proof (after circuits/scripts/prove.sh + export-vk.sh):"

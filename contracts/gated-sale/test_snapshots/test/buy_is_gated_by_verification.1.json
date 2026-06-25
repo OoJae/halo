@@ -109,6 +109,42 @@
                       "key": {
                         "vec": [
                           {
+                            "symbol": "BannedCountry"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "u256": "643"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "MinBirthYear"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "u256": "2008"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "RequireAccredited"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "u256": "1"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
                             "symbol": "Scope"
                           }
                         ]
@@ -136,7 +172,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 2000000
       },
       {
         "entry": {
@@ -170,7 +206,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 1000000
+        "live_until": 2000000
       }
     ]
   },

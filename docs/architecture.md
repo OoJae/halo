@@ -26,7 +26,7 @@ Issue once → hold privately → prove in-browser → verify on-chain → gate 
   and generates proofs in the browser. PII never leaves the device.
 - **Verifier dApp**: gates an action on a Halo proof (the demo ships a regulated token sale).
 - **Auditor** (optional): can recover a chosen attribute via a view-key (demo tier).
-- **Revocation**: issuer removes the leaf and republishes the root; old proofs stop verifying.
+- **Revocation** *(designed, not implemented)*: issuer would remove the leaf and republish the root; old proofs against the old root stop verifying.
 
 ## The circuit — `circuits/halo.circom`, `Halo(depth = 16)`
 
@@ -63,7 +63,8 @@ set_issuer_root(root: U256)                        // admin.require_auth(); stor
 set_policy(scope, minBirthYear, requireAccredited, bannedCountry)  // admin; bind a required policy to a scope
 get_policy(scope) -> Option<Policy>
 verify(caller, proof, public_signals: Vec<U256>)   // the core (below)
-is_verified(who, scope) -> bool                    // attestation lookup (used by gating dApps)
+is_verified(who, scope) -> bool                    // bare attestation existence
+is_verified_for(who, scope, minBirthYear, requireAccredited, bannedCountry) -> bool  // gating dApps use THIS
 attested_at(who, scope) -> Option<u32>             // ledger of the attestation
 ```
 `verify` runs: `caller.require_auth()` → `addr` binding check → `root == stored` → **policy check (if a
@@ -77,6 +78,12 @@ fine for the free-form "prove eligibility" demo (random scopes). The gated sale'
 registered policy `(2008, 1, 643)`, so unlocking it requires a proof that genuinely satisfies 18+ /
 accredited / not-in-banned-region — a trivial policy reverts `PolicyMismatch`.
 
+**Defense in depth:** every attestation also records the exact policy the proof satisfied, and gating
+dApps call `is_verified_for(who, scope, policy…)` rather than `is_verified`. So a gate cannot be
+satisfied by a trivial-policy attestation even on an unregistered scope — verified on-chain
+(`is_verified_for(…2008/1/643)` → true; `…1990/1/643` → false). The gated-sale uses this, so it stays
+closed regardless of whether the scope's registry policy was set.
+
 - **Embedded VK:** `circuits/scripts/gen-vk-rust.mjs` turns `verification_key.json` into `src/vk.rs`
   (const byte arrays); re-run after any circuit change.
 - **Verify core:** `vk_x = ic[0] + Σ pubᵢ·ic[i+1]`; accept ⇔ `e(-A,B)·e(α,β)·e(vk_x,γ)·e(C,δ) == 1`
@@ -89,7 +96,7 @@ accredited / not-in-banned-region — a trivial policy reverts `PolicyMismatch`.
 
 ### `gated-sale` (`contracts/gated-sale`)
 `initialize(admin, verifier, scope)`, `set_verifier(admin)`, `is_open(who)`, `buy(buyer, amount)` →
-`buyer.require_auth()` + cross-contract `env.invoke_contract::<bool>(verifier, "is_verified", [who, SALE_SCOPE])`
+`buyer.require_auth()` + cross-contract `env.invoke_contract::<bool>(verifier, "is_verified_for", [who, SALE_SCOPE, policy…])`
 else revert. `SALE_SCOPE = 424242`.
 
 ## The addr ↔ caller binding (anti-replay)
@@ -132,9 +139,9 @@ circom 2.2.3 · snarkjs 0.7.6 · default curve `bn128 = BN254` · stellar-cli 27
 | What | Value |
 |---|---|
 | Deployer / admin | `GC3ATO6LRJY7T5TN2AE6DJLAMT2JCVLMGI6IXAVPMD5OVGH5ODBQWYLQ` |
-| halo-verifier (policy-enforcing) | `CBLHW3IAGUJZ7XCJEAX2XJ3HXBSPATAP747MHTFUPMTITVOXGI2WMQPU` |
-| gated-sale (SALE_SCOPE 424242) | `CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2` |
-| verify tx (browser-submitted) | `62bbc7c845377ddf8e9ae40ea8ff5d96aa401c481a77494d6e431aa80f1b4845` (ledger 3265726) |
+| halo-verifier (policy-enforcing) | `CCPNP4O6LOVYTDWX3MWXJRFI74A6ORMS3WHW6OIX2OQM2ZFIFRNEDNSV` |
+| gated-sale (SALE_SCOPE 424242) | `CAHEKPK57DXY3SGQGYA5KQBHSWW4IUMJQEYEZMBXA3G6SYHBVVWUUELJ` |
+| verify tx (browser-submitted) | `3272ef373980c564912e037ec5ca0e0ecc2bd591ac6dc8e21f669271dbcff1bb` |
 | duplicate submit | reverts `Error(Contract, #6)` = NullifierUsed |
 | trivial policy on a policy-bound scope | reverts `Error(Contract, #8)` = PolicyMismatch |
 

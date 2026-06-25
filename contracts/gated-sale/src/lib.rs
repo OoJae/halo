@@ -13,6 +13,9 @@ pub enum DataKey {
     Admin,
     Verifier,
     Scope,
+    MinBirthYear,
+    RequireAccredited,
+    BannedCountry,
 }
 
 #[contracterror]
@@ -29,8 +32,19 @@ pub struct GatedSale;
 
 #[contractimpl]
 impl GatedSale {
-    /// One-time init: admin, the halo-verifier address, and the required sale scope.
-    pub fn initialize(env: Env, admin: Address, verifier: Address, scope: U256) -> Result<(), Error> {
+    /// One-time init: admin, the halo-verifier address, the sale scope, and the REQUIRED
+    /// eligibility policy. The sale gates on `is_verified_for(scope, policy)`, so it stays closed
+    /// unless the buyer proved exactly this policy — robust even if the verifier's scope registry
+    /// is unset.
+    pub fn initialize(
+        env: Env,
+        admin: Address,
+        verifier: Address,
+        scope: U256,
+        min_birth_year: U256,
+        require_accredited: U256,
+        banned_country: U256,
+    ) -> Result<(), Error> {
         let s = env.storage().instance();
         if s.has(&DataKey::Admin) {
             return Err(Error::AlreadyInitialized);
@@ -38,7 +52,10 @@ impl GatedSale {
         s.set(&DataKey::Admin, &admin);
         s.set(&DataKey::Verifier, &verifier);
         s.set(&DataKey::Scope, &scope);
-        s.extend_ttl(100_000, 1_000_000);
+        s.set(&DataKey::MinBirthYear, &min_birth_year);
+        s.set(&DataKey::RequireAccredited, &require_accredited);
+        s.set(&DataKey::BannedCountry, &banned_country);
+        s.extend_ttl(100_000, 2_000_000);
         Ok(())
     }
 
@@ -59,10 +76,20 @@ impl GatedSale {
             None => return false,
         };
         let scope: U256 = s.get(&DataKey::Scope).unwrap();
+        let mby: U256 = s.get(&DataKey::MinBirthYear).unwrap();
+        let ra: U256 = s.get(&DataKey::RequireAccredited).unwrap();
+        let bc: U256 = s.get(&DataKey::BannedCountry).unwrap();
         env.invoke_contract::<bool>(
             &verifier,
-            &Symbol::new(&env, "is_verified"),
-            vec![&env, who.into_val(&env), scope.into_val(&env)],
+            &Symbol::new(&env, "is_verified_for"),
+            vec![
+                &env,
+                who.into_val(&env),
+                scope.into_val(&env),
+                mby.into_val(&env),
+                ra.into_val(&env),
+                bc.into_val(&env),
+            ],
         )
     }
 

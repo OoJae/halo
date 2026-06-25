@@ -34,7 +34,7 @@ if (typeof window !== "undefined") {
 export const networks = {
   testnet: {
     networkPassphrase: "Test SDF Network ; September 2015",
-    contractId: "CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2",
+    contractId: "CAHEKPK57DXY3SGQGYA5KQBHSWW4IUMJQEYEZMBXA3G6SYHBVVWUUELJ",
   }
 } as const
 
@@ -44,7 +44,7 @@ export const Errors = {
   3: {message:"NotVerified"}
 }
 
-export type DataKey = {tag: "Admin", values: void} | {tag: "Verifier", values: void} | {tag: "Scope", values: void};
+export type DataKey = {tag: "Admin", values: void} | {tag: "Verifier", values: void} | {tag: "Scope", values: void} | {tag: "MinBirthYear", values: void} | {tag: "RequireAccredited", values: void} | {tag: "BannedCountry", values: void};
 
 export interface Client {
   /**
@@ -61,9 +61,12 @@ export interface Client {
 
   /**
    * Construct and simulate a initialize transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-   * One-time init: admin, the halo-verifier address, and the required sale scope.
+   * One-time init: admin, the halo-verifier address, the sale scope, and the REQUIRED
+   * eligibility policy. The sale gates on `is_verified_for(scope, policy)`, so it stays closed
+   * unless the buyer proved exactly this policy — robust even if the verifier's scope registry
+   * is unset.
    */
-  initialize: ({admin, verifier, scope}: {admin: string, verifier: string, scope: u256}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
+  initialize: ({admin, verifier, scope, min_birth_year, require_accredited, banned_country}: {admin: string, verifier: string, scope: u256, min_birth_year: u256, require_accredited: u256, banned_country: u256}, options?: MethodOptions) => Promise<AssembledTransaction<Result<void>>>
 
   /**
    * Construct and simulate a set_verifier transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
@@ -91,9 +94,9 @@ export class Client extends ContractClient {
     super(
       new ContractSpec([ "AAAABAAAAAAAAAAAAAAABUVycm9yAAAAAAAAAwAAAAAAAAASQWxyZWFkeUluaXRpYWxpemVkAAAAAAABAAAAAAAAAA5Ob3RJbml0aWFsaXplZAAAAAAAAgAAAAAAAAALTm90VmVyaWZpZWQAAAAAAw==",
         "AAAAAAAAAEpUaGUgZ2F0ZWQgYWN0aW9uLiBSZXZlcnRzIHVubGVzcyB0aGUgYnV5ZXIgaXMgdmVyaWZpZWQgZm9yIHRoZSBzYWxlIHNjb3BlLgAAAAAAA2J1eQAAAAACAAAAAAAAAAVidXllcgAAAAAAABMAAAAAAAAABmFtb3VudAAAAAAACwAAAAEAAAPpAAAACwAAAAM=",
-        "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAwAAAAAAAAAAAAAABUFkbWluAAAAAAAAAAAAAAAAAAAIVmVyaWZpZXIAAAAAAAAAAAAAAAVTY29wZQAAAA==",
+        "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAABgAAAAAAAAAAAAAABUFkbWluAAAAAAAAAAAAAAAAAAAIVmVyaWZpZXIAAAAAAAAAAAAAAAVTY29wZQAAAAAAAAAAAAAAAAAADE1pbkJpcnRoWWVhcgAAAAAAAAAAAAAAEVJlcXVpcmVBY2NyZWRpdGVkAAAAAAAAAAAAAAAAAAANQmFubmVkQ291bnRyeQAAAA==",
         "AAAAAAAAAE5UcnVlIGlmIGB3aG9gIGlzIEhhbG8tdmVyaWZpZWQgZm9yIHRoZSBzYWxlIHNjb3BlIChkZWxlZ2F0ZXMgdG8gdGhlIHZlcmlmaWVyKS4AAAAAAAdpc19vcGVuAAAAAAEAAAAAAAAAA3dobwAAAAATAAAAAQAAAAE=",
-        "AAAAAAAAAE1PbmUtdGltZSBpbml0OiBhZG1pbiwgdGhlIGhhbG8tdmVyaWZpZXIgYWRkcmVzcywgYW5kIHRoZSByZXF1aXJlZCBzYWxlIHNjb3BlLgAAAAAAAAppbml0aWFsaXplAAAAAAADAAAAAAAAAAVhZG1pbgAAAAAAABMAAAAAAAAACHZlcmlmaWVyAAAAEwAAAAAAAAAFc2NvcGUAAAAAAAAMAAAAAQAAA+kAAAACAAAAAw==",
+        "AAAAAAAAARNPbmUtdGltZSBpbml0OiBhZG1pbiwgdGhlIGhhbG8tdmVyaWZpZXIgYWRkcmVzcywgdGhlIHNhbGUgc2NvcGUsIGFuZCB0aGUgUkVRVUlSRUQKZWxpZ2liaWxpdHkgcG9saWN5LiBUaGUgc2FsZSBnYXRlcyBvbiBgaXNfdmVyaWZpZWRfZm9yKHNjb3BlLCBwb2xpY3kpYCwgc28gaXQgc3RheXMgY2xvc2VkCnVubGVzcyB0aGUgYnV5ZXIgcHJvdmVkIGV4YWN0bHkgdGhpcyBwb2xpY3kg4oCUIHJvYnVzdCBldmVuIGlmIHRoZSB2ZXJpZmllcidzIHNjb3BlIHJlZ2lzdHJ5CmlzIHVuc2V0LgAAAAAKaW5pdGlhbGl6ZQAAAAAABgAAAAAAAAAFYWRtaW4AAAAAAAATAAAAAAAAAAh2ZXJpZmllcgAAABMAAAAAAAAABXNjb3BlAAAAAAAADAAAAAAAAAAObWluX2JpcnRoX3llYXIAAAAAAAwAAAAAAAAAEnJlcXVpcmVfYWNjcmVkaXRlZAAAAAAADAAAAAAAAAAOYmFubmVkX2NvdW50cnkAAAAAAAwAAAABAAAD6QAAAAIAAAAD",
         "AAAAAAAAADFBZG1pbi1vbmx5OiB1cGRhdGUgdGhlIHZlcmlmaWVyIGNvbnRyYWN0IGFkZHJlc3MuAAAAAAAADHNldF92ZXJpZmllcgAAAAEAAAAAAAAACHZlcmlmaWVyAAAAEwAAAAEAAAPpAAAAAgAAAAM=" ]),
       options
     )

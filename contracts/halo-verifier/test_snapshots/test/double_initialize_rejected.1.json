@@ -6,6 +6,7 @@
   },
   "auth": [
     [],
+    [],
     []
   ],
   "ledger": {
@@ -32,14 +33,27 @@
                   "executable": {
                     "wasm": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
                   },
-                  "storage": null
+                  "storage": [
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Admin"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "address": "GC3ATO6LRJY7T5TN2AE6DJLAMT2JCVLMGI6IXAVPMD5OVGH5ODBQWYLQ"
+                      }
+                    }
+                  ]
                 }
               }
             }
           },
           "ext": "v0"
         },
-        "live_until": 4095
+        "live_until": 2000000
       },
       {
         "entry": {
@@ -53,7 +67,7 @@
           },
           "ext": "v0"
         },
-        "live_until": 4095
+        "live_until": 2000000
       }
     ]
   },

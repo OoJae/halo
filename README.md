@@ -78,9 +78,9 @@ Stellar Wallets Kit · **in-browser proving** (snarkjs WASM) · tweetnacl for th
 
 | | |
 |---|---|
-| **halo-verifier** | [`CBLHW3IAGUJZ7XCJEAX2XJ3HXBSPATAP747MHTFUPMTITVOXGI2WMQPU`](https://stellar.expert/explorer/testnet/contract/CBLHW3IAGUJZ7XCJEAX2XJ3HXBSPATAP747MHTFUPMTITVOXGI2WMQPU) |
-| **gated-sale** | [`CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2`](https://stellar.expert/explorer/testnet/contract/CAZXMBOBMI2YY5IRR5VVELUFHNK6NBGQEA2Z4L7LOZXIZLO23H7QBXA2) |
-| **Example verification tx** (browser-submitted proof) | [`62bbc7c8…4845`](https://stellar.expert/explorer/testnet/tx/62bbc7c845377ddf8e9ae40ea8ff5d96aa401c481a77494d6e431aa80f1b4845) |
+| **halo-verifier** | [`CCPNP4O6LOVYTDWX3MWXJRFI74A6ORMS3WHW6OIX2OQM2ZFIFRNEDNSV`](https://stellar.expert/explorer/testnet/contract/CCPNP4O6LOVYTDWX3MWXJRFI74A6ORMS3WHW6OIX2OQM2ZFIFRNEDNSV) |
+| **gated-sale** | [`CAHEKPK57DXY3SGQGYA5KQBHSWW4IUMJQEYEZMBXA3G6SYHBVVWUUELJ`](https://stellar.expert/explorer/testnet/contract/CAHEKPK57DXY3SGQGYA5KQBHSWW4IUMJQEYEZMBXA3G6SYHBVVWUUELJ) |
+| **Example verification tx** (browser-submitted proof) | [`3272ef37…f1bb`](https://stellar.expert/explorer/testnet/tx/3272ef373980c564912e037ec5ca0e0ecc2bd591ac6dc8e21f669271dbcff1bb) |
 
 Submitting the same proof again reverts with `Error(Contract, #6)` = `NullifierUsed` (Sybil
 resistance); for a gate with a registered policy, a proof carrying a different (trivial) policy reverts

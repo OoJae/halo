@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."   # -> circuits/
 
-CIRCUIT="${1:-mul}"
+CIRCUIT="${1:-halo}"
 INPUT="${2:-input.json}"
 
 echo "==> Computing witness ..."
