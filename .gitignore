@@ -30,6 +30,7 @@ circuits/input.halo.json
 .DS_Store
 
 # Internal — not public-facing
+brand/
 PROGRESS.md
 Halo-Build-Guide.md
 Halo-ClaudeCode-Master-Prompt.md
