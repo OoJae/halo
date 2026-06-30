@@ -1,170 +1,173 @@
-import HaloCanvas from "../components/HaloCanvas";
-import { VERIFIER_ID, SALE_ID, EXPLORER_CONTRACT, EXPLORER_TX } from "../lib/stellar";
+import RingCanvas from "../components/RingCanvas";
 
-const EXAMPLE_TX = "3272ef373980c564912e037ec5ca0e0ecc2bd591ac6dc8e21f669271dbcff1bb";
-const short = (s: string) => `${s.slice(0, 5)}…${s.slice(-3)}`;
-
+// Faithful port of brand/Halo - Developers.dc.html. Inline styles mirror the source verbatim;
+// scroll reveals use the [data-reveal] rule in brand.css. Nav + Footer come from Layout.
 export default function Developers() {
   return (
     <>
-      <HaloCanvas cx={0.8} cy={0.28} tunnelN={900} />
+      <RingCanvas R={250} rt={15} ringN={1400} tilt={0.5} cxDesktop={0.74} cyBase={0.32} cyFactor={0.12} cyMax={0.4} />
 
-      <header className="section section-pad container">
-        <div className="eyebrow" data-reveal>For developers</div>
-        <h1 className="h1" style={{ marginTop: 20, fontSize: "clamp(2.2rem,5.5vw,4.6rem)", maxWidth: 940 }} data-reveal>
-          Groth16 over BN254, verified by Soroban host functions.
-        </h1>
-        <p className="lead" style={{ marginTop: 24, maxWidth: 700 }} data-reveal>
-          The circuit, the encoding spec, and the contracts — exactly as they run on testnet today.
-          Hand-ported BN254 pairing verifier; in-browser proving; one attestation per scope.
-        </p>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 28 }} data-reveal>
-          {["circom 2.2.3", "snarkjs 0.7.6", "soroban-sdk 25.3", "rust 1.92 · wasm32v1"].map((t) => (
-            <span className="pill" key={t}>{t}</span>
-          ))}
+      {/* HEADER */}
+      <header style={{ position: "relative", zIndex: 2, minHeight: "clamp(480px,72vh,760px)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "104px clamp(22px,5vw,60px) clamp(40px,6vh,80px)", maxWidth: 1180, margin: "0 auto" }}>
+        <div style={{ fontFamily: "var(--mono)", fontSize: "clamp(11px,1.05vw,13px)", letterSpacing: ".28em", textTransform: "uppercase", color: "#7B8499", marginBottom: "clamp(22px,3vh,34px)" }}>For developers</div>
+        <h1 style={{ margin: 0, maxWidth: 980, fontFamily: "var(--sans)", fontWeight: 800, fontStretch: "120%", letterSpacing: "-.028em", lineHeight: ".96", fontSize: "clamp(2.4rem,6vw,5.6rem)", color: "#E9ECF4" }}>Groth16 over BN254, verified by Soroban host functions.</h1>
+        <p style={{ margin: "clamp(26px,4vh,38px) 0 0", maxWidth: 640, fontFamily: "var(--sans)", fontWeight: 400, fontSize: "clamp(1.05rem,1.5vw,1.32rem)", lineHeight: 1.5, color: "#A7AFC4" }}>The circuit, the encoding spec, and the contracts — exactly as they run on testnet today. Hand-ported BN254 pairing verifier; in-browser proving; one attestation per scope.</p>
+        <div style={{ marginTop: "clamp(30px,4vh,44px)", display: "flex", gap: 14, flexWrap: "wrap", fontFamily: "var(--mono)", fontSize: 11.5, letterSpacing: ".06em" }}>
+          <span style={{ border: "1px solid #1b1e34", borderRadius: 2, padding: "7px 12px", color: "#9aa2b8" }}>circom 2.2.3</span>
+          <span style={{ border: "1px solid #1b1e34", borderRadius: 2, padding: "7px 12px", color: "#9aa2b8" }}>snarkjs 0.7.6</span>
+          <span style={{ border: "1px solid #1b1e34", borderRadius: 2, padding: "7px 12px", color: "#9aa2b8" }}>soroban-sdk 25.3</span>
+          <span style={{ border: "1px solid #1b1e34", borderRadius: 2, padding: "7px 12px", color: "#9aa2b8" }}>rust 1.92 · wasm32v1</span>
         </div>
       </header>
 
-      {/* THE CIRCUIT */}
-      <section className="section section-pad container">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(24px,4vw,56px)", alignItems: "start" }} className="hiw-row">
+      {/* CIRCUIT */}
+      <section style={{ position: "relative", zIndex: 2, background: "#07080F", borderTop: "1px solid #12141f" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(60px,9vh,110px) clamp(22px,5vw,60px)", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: "clamp(28px,4vw,60px)", alignItems: "start" }}>
           <div data-reveal>
-            <div className="eyebrow">The circuit</div>
-            <h2 className="h2" style={{ marginTop: 16, fontSize: "clamp(1.7rem,3vw,2.6rem)" }}>Halo(depth = 16)</h2>
-            <p className="body" style={{ marginTop: 16 }}>
-              ~4,525 non-linear constraints over BN254, set up against the Hermez <code className="mono ink-indigo">ptau 14</code> (16,384).
-              Range and boolean constraints bind the comparator inputs, so the gates are sound independent of
-              issuer well-formedness.
-            </p>
-            <p className="body" style={{ marginTop: 14 }}>
-              A predicate violation throws at witness generation — the intended "this proof can't exist" behavior.
-            </p>
+            <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".24em", textTransform: "uppercase", color: "#7B8499", marginBottom: 20 }}>The circuit</div>
+            <h2 style={{ margin: "0 0 18px", fontFamily: "var(--sans)", fontWeight: 700, fontStretch: "112%", letterSpacing: "-.022em", lineHeight: 1.04, fontSize: "clamp(1.7rem,3.6vw,2.8rem)", color: "#E9ECF4" }}>Halo(depth = 16)</h2>
+            <p style={{ margin: "0 0 16px", fontSize: "clamp(1rem,1.3vw,1.16rem)", lineHeight: 1.65, color: "#A7AFC4" }}>~4,525 non-linear constraints over BN254, set up against the Hermez <span style={{ fontFamily: "var(--mono)", fontSize: 13, color: "#B7B8FF" }}>ptau&nbsp;14</span> (16,384). Range and boolean constraints bind the comparator inputs, so the gates are sound independent of issuer well-formedness.</p>
+            <p style={{ margin: 0, fontSize: "clamp(1rem,1.3vw,1.16rem)", lineHeight: 1.65, color: "#7B8499" }}>A predicate violation throws at witness generation — the intended "this proof can't exist" behavior.</p>
           </div>
-          <div className="card-spec" data-reveal>
-            <div className="numcard-tag">SIGNALS</div>
-            <div className="mono" style={{ fontSize: 12.5, marginTop: 14, lineHeight: 1.9, color: "var(--text-3)" }}>
-              <div style={{ color: "var(--muted-2)" }}>private</div>
-              <div>birthYear, country, accredited, secret,</div>
-              <div>pathElements[16], pathIndices[16]</div>
-              <div style={{ color: "var(--muted-2)", marginTop: 12 }}>public</div>
-              <div>root, scope, minBirthYear,</div>
-              <div>requireAccredited, bannedCountry, addr</div>
-              <div style={{ color: "var(--muted-2)", marginTop: 12 }}>output</div>
-              <div className="ink-green">nullifier</div>
-            </div>
+          <div data-reveal style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 6, padding: 24, fontFamily: "var(--mono)", fontSize: 12.5, lineHeight: 1.7 }}>
+            <div style={{ fontSize: 11, letterSpacing: ".18em", color: "#646b80", marginBottom: 14 }}>SIGNALS</div>
+            <div style={{ color: "#6b7288" }}>private</div>
+            <div style={{ color: "#cdd3e4", marginBottom: 12 }}>birthYear, country, accredited,<br />secret, pathElements[16], pathIndices[16]</div>
+            <div style={{ color: "#6b7288" }}>public</div>
+            <div style={{ color: "#cdd3e4", marginBottom: 12 }}>root, scope, minBirthYear,<br />requireAccredited, bannedCountry, addr</div>
+            <div style={{ color: "#6b7288" }}>output</div>
+            <div style={{ color: "#B7B8FF" }}>nullifier</div>
           </div>
         </div>
       </section>
 
-      {/* PUBLIC-SIGNALS ORDER */}
-      <section className="section section-pad container">
-        <div className="eyebrow" data-reveal>Public-signals order</div>
-        <p className="lead" style={{ marginTop: 16, maxWidth: 680 }} data-reveal>
-          snarkjs writes outputs first, then declared public inputs. The contract re-reads them in exactly this order.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginTop: 32 }}>
-          {[
-            ["[0]", "nullifier"], ["[1]", "root"], ["[2]", "scope"], ["[3]", "minBirthYear"],
-            ["[4]", "requireAccredited"], ["[5]", "bannedCountry"], ["[6]", "addr"],
-          ].map(([i, name]) => (
-            <div className="card-spec" key={i} style={{ padding: 18 }} data-reveal>
-              <div className="mono ink-indigo" style={{ fontSize: 13 }}>{i}</div>
-              <div className="mono" style={{ fontSize: 13, marginTop: 8, color: "var(--text-2)" }}>{name}</div>
-            </div>
-          ))}
+      {/* PUBLIC SIGNALS ORDER */}
+      <section style={{ position: "relative", zIndex: 2, background: "linear-gradient(180deg,#07080F,#0a0c18)", borderTop: "1px solid #12141f" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(60px,9vh,110px) clamp(22px,5vw,60px)" }}>
+          <div data-reveal style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".24em", textTransform: "uppercase", color: "#7B8499", marginBottom: 18 }}>Public-signals order</div>
+          <p data-reveal style={{ margin: "0 0 clamp(32px,5vh,52px)", maxWidth: 680, fontSize: "clamp(1rem,1.3vw,1.16rem)", lineHeight: 1.6, color: "#A7AFC4" }}>snarkjs writes outputs first, then declared public inputs. The contract re-reads them in exactly this order.</p>
+          <div data-reveal style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10, fontFamily: "var(--mono)" }}>
+            <div style={{ background: "#0A0C16", border: "1px solid #232653", borderRadius: 5, padding: 18 }}><div style={{ color: "#646b80", fontSize: 11 }}>[0]</div><div style={{ color: "#B7B8FF", fontSize: 14, marginTop: 6 }}>nullifier</div></div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 18 }}><div style={{ color: "#646b80", fontSize: 11 }}>[1]</div><div style={{ color: "#cdd3e4", fontSize: 14, marginTop: 6 }}>root</div></div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 18 }}><div style={{ color: "#646b80", fontSize: 11 }}>[2]</div><div style={{ color: "#cdd3e4", fontSize: 14, marginTop: 6 }}>scope</div></div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 18 }}><div style={{ color: "#646b80", fontSize: 11 }}>[3]</div><div style={{ color: "#cdd3e4", fontSize: 14, marginTop: 6 }}>minBirthYear</div></div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 18 }}><div style={{ color: "#646b80", fontSize: 11 }}>[4]</div><div style={{ color: "#cdd3e4", fontSize: 14, marginTop: 6 }}>requireAccredited</div></div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 18 }}><div style={{ color: "#646b80", fontSize: 11 }}>[5]</div><div style={{ color: "#cdd3e4", fontSize: 14, marginTop: 6 }}>bannedCountry</div></div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 18 }}><div style={{ color: "#646b80", fontSize: 11 }}>[6]</div><div style={{ color: "#cdd3e4", fontSize: 14, marginTop: 6 }}>addr</div></div>
+          </div>
         </div>
       </section>
 
       {/* ENCODING SPEC */}
-      <section className="section section-pad container">
-        <div className="eyebrow" data-reveal>The encoding spec</div>
-        <h2 className="h2" style={{ marginTop: 16, maxWidth: 760 }} data-reveal>32-byte big-endian, EIP-196/197 compatible.</h2>
-        <p className="lead" style={{ marginTop: 18, maxWidth: 660 }} data-reveal>
-          Field elements encode uncompressed. The one integration risk worth memorizing is the G2 Fp2 ordering.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16, marginTop: 36 }}>
-          <EncCard label="G1 · BytesN<64>" size="64 bytes" fmt="x_be(32) ‖ y_be(32)" use="pi_a, pi_c, vk_alpha, each IC" />
-          <EncCard label="G2 · BytesN<128>" size="128 bytes" fmt="x.c1 ‖ x.c0 ‖ y.c1 ‖ y.c0" use="pi_b, vk_beta / gamma / delta" />
-          <EncCard label="SCALAR · U256" size="32 bytes" fmt="big-endian" use="each public signal" />
-          <div className="card-spec" style={{ borderColor: "#3a2f10", background: "rgba(251,191,107,.04)" }} data-reveal>
-            <div className="numcard-tag" style={{ color: "var(--warn)" }}>⚠ THE FP2 GOTCHA</div>
-            <p className="body" style={{ marginTop: 12 }}>
-              snarkjs emits Fp2 as <code className="mono">[c0, c1]</code>. The BN254 host wants the <strong className="ink">imaginary part first</strong> —
-              encode <code className="mono">c1 ‖ c0</code>. Get it wrong and a valid proof fails on-chain.
-            </p>
+      <section style={{ position: "relative", zIndex: 2, background: "#07080F", borderTop: "1px solid #12141f" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(60px,9vh,110px) clamp(22px,5vw,60px)" }}>
+          <div data-reveal style={{ maxWidth: 760, marginBottom: "clamp(36px,5vh,56px)" }}>
+            <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".24em", textTransform: "uppercase", color: "#7B8499", marginBottom: 18 }}>The encoding spec</div>
+            <h2 style={{ margin: "0 0 16px", fontFamily: "var(--sans)", fontWeight: 700, fontStretch: "112%", letterSpacing: "-.022em", lineHeight: 1.04, fontSize: "clamp(1.7rem,3.6vw,2.8rem)", color: "#E9ECF4" }}>32-byte big-endian, EIP-196/197 compatible.</h2>
+            <p style={{ margin: 0, fontSize: "clamp(1rem,1.3vw,1.16rem)", lineHeight: 1.6, color: "#A7AFC4" }}>Field elements encode uncompressed. The one integration risk worth memorizing is the G2 Fp2 ordering.</p>
+          </div>
+          <div data-reveal style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: "clamp(14px,1.6vw,18px)" }}>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 24, fontFamily: "var(--mono)" }}>
+              <div style={{ fontSize: 11, letterSpacing: ".16em", color: "#646b80", marginBottom: 14 }}>G1 · BytesN&lt;64&gt;</div>
+              <div style={{ fontSize: 18, color: "#E9ECF4", marginBottom: 10 }}>64 bytes</div>
+              <div style={{ fontSize: 12.5, color: "#9aa2b8" }}>x_be(32) ‖ y_be(32)</div>
+              <div style={{ fontSize: 12, color: "#6b7288", marginTop: 8 }}>pi_a, pi_c, vk_alpha, each IC</div>
+            </div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 24, fontFamily: "var(--mono)" }}>
+              <div style={{ fontSize: 11, letterSpacing: ".16em", color: "#646b80", marginBottom: 14 }}>G2 · BytesN&lt;128&gt;</div>
+              <div style={{ fontSize: 18, color: "#E9ECF4", marginBottom: 10 }}>128 bytes</div>
+              <div style={{ fontSize: 12.5, color: "#9aa2b8" }}>x.c1 ‖ x.c0 ‖ y.c1 ‖ y.c0</div>
+              <div style={{ fontSize: 12, color: "#6b7288", marginTop: 8 }}>pi_b, vk_beta / gamma / delta</div>
+            </div>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 5, padding: 24, fontFamily: "var(--mono)" }}>
+              <div style={{ fontSize: 11, letterSpacing: ".16em", color: "#646b80", marginBottom: 14 }}>SCALAR · U256</div>
+              <div style={{ fontSize: 18, color: "#E9ECF4", marginBottom: 10 }}>32 bytes</div>
+              <div style={{ fontSize: 12.5, color: "#9aa2b8" }}>big-endian</div>
+              <div style={{ fontSize: 12, color: "#6b7288", marginTop: 8 }}>each public signal</div>
+            </div>
+            <div style={{ background: "rgba(251,191,107,.05)", border: "1px solid #3a2f10", borderRadius: 5, padding: 24, fontFamily: "var(--mono)" }}>
+              <div style={{ fontSize: 11, letterSpacing: ".16em", color: "#fbbf6b", marginBottom: 14 }}>⚠ THE FP2 GOTCHA</div>
+              <div style={{ fontSize: 13, color: "#e7d3a8", lineHeight: 1.6 }}>snarkjs emits Fp2 as [c0, c1]. The BN254 host wants the <strong>imaginary part first</strong> — encode c1 ‖ c0. Get it wrong and a valid proof fails on-chain.</div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CONTRACTS */}
-      <section className="section section-pad container">
-        <div className="eyebrow" data-reveal>The contracts</div>
-        <h2 className="h2" style={{ marginTop: 16, maxWidth: 720 }} data-reveal>Two Soroban contracts, live on testnet.</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16, marginTop: 36 }}>
-          <div className="card" data-reveal>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <span className="numcard-tag" style={{ color: "var(--indigo)" }}>halo-verifier</span>
-              <a className="btn-arrow" style={{ fontSize: 12 }} href={EXPLORER_CONTRACT(VERIFIER_ID)} target="_blank" rel="noreferrer">{short(VERIFIER_ID)} ↗</a>
+      <section style={{ position: "relative", zIndex: 2, background: "linear-gradient(180deg,#07080F,#0a0c18)", borderTop: "1px solid #12141f" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(60px,9vh,110px) clamp(22px,5vw,60px)" }}>
+          <div data-reveal style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".24em", textTransform: "uppercase", color: "#7B8499", marginBottom: 18 }}>The contracts</div>
+          <h2 data-reveal style={{ margin: "0 0 clamp(36px,5vh,56px)", maxWidth: 780, fontFamily: "var(--sans)", fontWeight: 700, fontStretch: "112%", letterSpacing: "-.022em", lineHeight: 1.04, fontSize: "clamp(1.7rem,3.6vw,2.8rem)", color: "#E9ECF4" }}>Two Soroban contracts, live on testnet.</h2>
+          <div data-reveal style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: "clamp(14px,1.8vw,20px)" }}>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 6, padding: 26 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}><span style={{ fontFamily: "var(--sans)", fontWeight: 600, fontSize: 19, color: "#E9ECF4" }}>halo-verifier</span><a href="https://stellar.expert/explorer/testnet/contract/CCPNP4O6LOVYTDWX3MWXJRFI74A6ORMS3WHW6OIX2OQM2ZFIFRNEDNSV" target="_blank" rel="noreferrer" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#B7B8FF" }}>CCPNP…NSV ↗</a></div>
+              <div style={{ display: "grid", gap: 8, fontFamily: "var(--mono)", fontSize: 12.5, color: "#9aa2b8" }}>
+                <div>set_issuer_root(root)</div>
+                <div>set_policy(scope, …)</div>
+                <div style={{ color: "#cdd3e4" }}>verify(caller, proof, signals)</div>
+                <div style={{ color: "#cdd3e4" }}>is_verified_for(who, scope, …)</div>
+                <div>attested_at(who, scope)</div>
+              </div>
             </div>
-            <ul className="mono" style={{ listStyle: "none", padding: 0, margin: "16px 0 0", display: "grid", gap: 9, fontSize: 12.5, color: "var(--text-3)" }}>
-              <li>set_issuer_root(root)</li><li>set_policy(scope, …)</li><li>verify(caller, proof, signals)</li>
-              <li>is_verified_for(who, scope, …)</li><li>attested_at(who, scope)</li>
-            </ul>
-          </div>
-          <div className="card" data-reveal>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <span className="numcard-tag" style={{ color: "var(--indigo)" }}>gated-sale</span>
-              <a className="btn-arrow" style={{ fontSize: 12 }} href={EXPLORER_CONTRACT(SALE_ID)} target="_blank" rel="noreferrer">{short(SALE_ID)} ↗</a>
+            <div style={{ background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 6, padding: 26 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}><span style={{ fontFamily: "var(--sans)", fontWeight: 600, fontSize: 19, color: "#E9ECF4" }}>gated-sale</span><a href="https://stellar.expert/explorer/testnet/contract/CAHEKPK57DXY3SGQGYA5KQBHSWW4IUMJQEYEZMBXA3G6SYHBVVWUUELJ" target="_blank" rel="noreferrer" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#B7B8FF" }}>CAHEK…ELJ ↗</a></div>
+              <div style={{ display: "grid", gap: 8, fontFamily: "var(--mono)", fontSize: 12.5, color: "#9aa2b8" }}>
+                <div>initialize(admin, verifier, scope)</div>
+                <div>is_open(who)</div>
+                <div style={{ color: "#cdd3e4" }}>buy(buyer, amount)</div>
+                <div style={{ color: "#6b7288" }}>→ cross-contract is_verified_for</div>
+                <div style={{ color: "#6b7288" }}>SALE_SCOPE = 424242</div>
+              </div>
             </div>
-            <ul className="mono" style={{ listStyle: "none", padding: 0, margin: "16px 0 0", display: "grid", gap: 9, fontSize: 12.5, color: "var(--text-3)" }}>
-              <li>initialize(admin, verifier, scope)</li><li>is_open(who)</li><li>buy(buyer, amount)</li>
-              <li className="ink-green">→ cross-contract is_verified_for</li><li>SALE_SCOPE = 424242</li>
-            </ul>
           </div>
-          <div className="card-spec" data-reveal>
-            <div className="numcard-tag" style={{ color: "var(--danger)" }}>ERROR CODES</div>
-            <div className="mono" style={{ fontSize: 12.5, marginTop: 14, display: "grid", gap: 9, color: "var(--text-3)" }}>
-              {[["#3", "BadSignals"], ["#4", "AddrMismatch"], ["#5", "RootMismatch"], ["#6", "NullifierUsed"], ["#7", "InvalidProof"], ["#8", "PolicyMismatch"]].map(([c, m]) => (
-                <div key={c} style={{ display: "flex", gap: 12 }}><span className="ink-indigo" style={{ width: 28 }}>{c}</span><span>{m}</span></div>
-              ))}
+          <div data-reveal style={{ marginTop: 18, background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 6, padding: "22px 26px", fontFamily: "var(--mono)" }}>
+            <div style={{ fontSize: 11, letterSpacing: ".16em", color: "#646b80", marginBottom: 14 }}>ERROR CODES</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: "10px 22px", fontSize: 12.5, color: "#9aa2b8" }}>
+              <div><span style={{ color: "#f87171" }}>#3</span> BadSignals</div>
+              <div><span style={{ color: "#f87171" }}>#4</span> AddrMismatch</div>
+              <div><span style={{ color: "#f87171" }}>#5</span> RootMismatch</div>
+              <div><span style={{ color: "#f87171" }}>#6</span> NullifierUsed</div>
+              <div><span style={{ color: "#f87171" }}>#7</span> InvalidProof</div>
+              <div><span style={{ color: "#f87171" }}>#8</span> PolicyMismatch</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* RUN IT */}
-      <section className="section section-pad container">
-        <div className="eyebrow" data-reveal>Run it</div>
-        <h2 className="h2" style={{ marginTop: 16 }} data-reveal>From a clean checkout.</h2>
-        <pre className="codeblock" style={{ marginTop: 28, whiteSpace: "pre-wrap" }} data-reveal>
-          <span className="c"># 1 — circuit: compile + trusted setup + sample proof</span>{"\n"}
-          <span className="g">cd</span> circuits &amp;&amp; npm install{"\n"}
-          <span className="g">bash</span> scripts/setup.sh halo{"\n\n"}
-          <span className="c"># 2 — contracts: test + deploy to testnet</span>{"\n"}
-          <span className="g">cd</span> ../contracts/halo-verifier &amp;&amp; cargo test{"\n"}
-          <span className="g">stellar</span> contract build{"\n\n"}
-          <span className="c"># 3 — frontend + issuer api (the demo)</span>{"\n"}
-          <span className="g">cd</span> ../../frontend &amp;&amp; npm install{"\n"}
-          <span className="g">bash</span> ../scripts/dev.sh <span className="c"># issuer :8787 · web :5173</span>
-        </pre>
-        <div style={{ display: "flex", gap: 16, marginTop: 30, flexWrap: "wrap" }} data-reveal>
-          <a href="https://github.com/OoJae/halo" target="_blank" rel="noreferrer" className="btn btn-primary">View the repo ↗</a>
-          <a href={EXPLORER_TX(EXAMPLE_TX)} target="_blank" rel="noreferrer" className="btn btn-tertiary">Example verify tx ↗</a>
+      <section style={{ position: "relative", zIndex: 2, background: "#07080F", borderTop: "1px solid #12141f" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(60px,9vh,110px) clamp(22px,5vw,60px)" }}>
+          <div data-reveal style={{ maxWidth: 760, marginBottom: "clamp(32px,4vh,48px)" }}>
+            <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".24em", textTransform: "uppercase", color: "#7B8499", marginBottom: 18 }}>Run it</div>
+            <h2 style={{ margin: 0, fontFamily: "var(--sans)", fontWeight: 700, fontStretch: "112%", letterSpacing: "-.022em", lineHeight: 1.04, fontSize: "clamp(1.7rem,3.6vw,2.8rem)", color: "#E9ECF4" }}>From a clean checkout.</h2>
+          </div>
+          <div data-reveal style={{ background: "#06070D", border: "1px solid #1b1e34", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 18px", borderBottom: "1px solid #14162400", background: "#0A0C16" }}>
+              <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a3048" }}></span>
+              <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a3048" }}></span>
+              <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a3048" }}></span>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#646b80", marginLeft: 10 }}>scripts/dev.sh</span>
+            </div>
+            <div style={{ padding: "24px clamp(18px,3vw,30px)", fontFamily: "var(--mono)", fontSize: "clamp(12px,1.2vw,13.5px)", lineHeight: 2, color: "#cdd3e4", overflowX: "auto" }}>
+              <div><span style={{ color: "#646b80" }}># 1 — circuit: compile + trusted setup + sample proof</span></div>
+              <div><span style={{ color: "#34D399" }}>cd</span> circuits &amp;&amp; npm install</div>
+              <div><span style={{ color: "#34D399" }}>bash</span> scripts/setup.sh halo</div>
+              <div style={{ height: 10 }}></div>
+              <div><span style={{ color: "#646b80" }}># 2 — contracts: test + deploy to testnet</span></div>
+              <div><span style={{ color: "#34D399" }}>cd</span> ../contracts/halo-verifier &amp;&amp; cargo test</div>
+              <div><span style={{ color: "#34D399" }}>stellar</span> contract build</div>
+              <div style={{ height: 10 }}></div>
+              <div><span style={{ color: "#646b80" }}># 3 — frontend + issuer api (the demo)</span></div>
+              <div><span style={{ color: "#34D399" }}>cd</span> ../../frontend &amp;&amp; npm install</div>
+              <div><span style={{ color: "#34D399" }}>bash</span> ../scripts/dev.sh <span style={{ color: "#646b80" }}># issuer :8787 · web :5173</span></div>
+            </div>
+          </div>
+          <div data-reveal style={{ marginTop: "clamp(36px,5vh,52px)", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+            <a href="https://github.com/OoJae/halo" target="_blank" rel="noreferrer" style={{ fontFamily: "var(--mono)", fontSize: 13.5, letterSpacing: ".04em", color: "#0A0B12", background: "#B7B8FF", padding: "15px 26px", borderRadius: 2 }}>View the repo ↗</a>
+            <a href="https://stellar.expert/explorer/testnet/tx/3272ef373980c564912e037ec5ca0e0ecc2bd591ac6dc8e21f669271dbcff1bb" target="_blank" rel="noreferrer" style={{ fontFamily: "var(--mono)", fontSize: 13, letterSpacing: ".04em", color: "#cdd3e4", borderBottom: "1px solid #2a3048", paddingBottom: 4 }}>Example verify tx ↗</a>
+          </div>
         </div>
       </section>
     </>
-  );
-}
-
-function EncCard({ label, size, fmt, use }: { label: string; size: string; fmt: string; use: string }) {
-  return (
-    <div className="card-spec" data-reveal>
-      <div className="numcard-tag">{label}</div>
-      <div className="mono" style={{ fontSize: 12.5, marginTop: 14, display: "grid", gap: 8, color: "var(--text-3)" }}>
-        <div><span style={{ color: "var(--muted-2)" }}>size </span>{size}</div>
-        <div><span style={{ color: "var(--muted-2)" }}>fmt </span><span className="ink-indigo">{fmt}</span></div>
-        <div><span style={{ color: "var(--muted-2)" }}>use </span>{use}</div>
-      </div>
-    </div>
   );
 }

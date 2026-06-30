@@ -7,7 +7,6 @@ import Footer from "./Footer";
 export default function Layout() {
   return (
     <>
-      <div className="halo-vignette" />
       <Nav />
       <main className="page" style={{ minHeight: "60vh" }}>
         <Outlet />

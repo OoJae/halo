@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import Nav from "../components/Nav";
+import Footer from "../components/Footer";
 import {
   connectWallet, connectDemo, hasDemo, submitVerify, attestedAt, saleIsOpen, buy,
   SALE_SCOPE, EXPLORER_TX,
@@ -7,10 +8,8 @@ import {
 import { proveHalo, type Credential, type Gate } from "../lib/prover";
 import { encryptToAuditor, auditorDecrypt, AUDITOR_SECRET, type Sealed } from "../lib/viewkey";
 import demoCredential from "../demo-credential.json";
-import HaloCanvas from "../components/HaloCanvas";
-import Footer from "../components/Footer";
 
-// ---------- helpers (logic preserved from the original dApp) ----------
+// ---------- logic (preserved verbatim from the working dApp) ----------
 const short = (s: string, n = 6) => (s ? `${s.slice(0, n)}…${s.slice(-4)}` : "");
 const freshScope = () => {
   const a = new Uint32Array(2);
@@ -29,17 +28,35 @@ const decodeError = (e: any) => {
 const POLICY: Omit<Gate, "scope"> = { minBirthYear: "2008", requireAccredited: "1", bannedCountry: "643" };
 const COUNTRY_NAMES: Record<string, string> = { "840": "United States", "643": "Russia", "364": "Iran" };
 
-const Mono: React.FC<{ children: React.ReactNode }> = ({ children }) => <span className="mono">{children}</span>;
-const Spinner = () => <span className="spinner" aria-label="working" />;
+// ---------- shared style tokens (mirrors brand/Halo - Demo.dc.html) ----------
+const S: Record<string, React.CSSProperties> = {
+  mono: { fontFamily: "var(--mono)" },
+  stepRow: { display: "flex", alignItems: "center", gap: 11, marginBottom: 14 },
+  stepNum: { width: 22, height: 22, borderRadius: "50%", background: "rgba(139,140,248,.14)", color: "#B7B8FF", display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 12, fontWeight: 600 },
+  stepTitle: { fontFamily: "var(--sans)", fontWeight: 600, fontSize: 17, color: "#E9ECF4" },
+  stepBody: { margin: "0 0 16px", fontSize: 14, lineHeight: 1.6, color: "#8893a7" },
+  btnPrimary: { fontFamily: "var(--mono)", fontSize: 13, color: "#0A0B12", background: "#B7B8FF", border: "none", padding: "11px 18px", borderRadius: 7, cursor: "pointer" },
+  btnGhost: { fontFamily: "var(--mono)", fontSize: 13, color: "#E9ECF4", background: "#131a2b", border: "1px solid #2a3048", padding: "11px 18px", borderRadius: 7, cursor: "pointer" },
+  pillOk: { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 12, color: "#34D399", border: "1px solid #0f3b30", background: "rgba(52,211,153,.08)", padding: "7px 13px", borderRadius: 999 },
+  pillLock: { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 12, color: "#fbbf24", border: "1px solid #3a2f10", background: "rgba(251,191,36,.08)", padding: "6px 12px", borderRadius: 999 },
+  kvRow: { display: "flex", justifyContent: "space-between", gap: 14, fontFamily: "var(--mono)", fontSize: 12.5 },
+  demoCard: { background: "#0A0C16", border: "1px solid #1b1e34", borderRadius: 8, padding: 26 },
+  demoH3: { margin: "0 0 8px", fontFamily: "var(--sans)", fontWeight: 600, fontSize: 18, color: "#E9ECF4" },
+  demoP: { margin: "0 0 18px", fontSize: 13.5, lineHeight: 1.6, color: "#8893a7" },
+  demoBtn: { fontFamily: "var(--mono)", fontSize: 12.5, color: "#E9ECF4", background: "#131a2b", border: "1px solid #2a3048", padding: "10px 16px", borderRadius: 6, cursor: "pointer" },
+  resultBox: { marginTop: 16, display: "grid", gap: 8, fontFamily: "var(--mono)", fontSize: 12.5, background: "#0d1320", border: "1px solid #1b1e34", borderRadius: 7, padding: "13px 15px" },
+};
+const Spinner = () => <span style={{ width: 14, height: 14, minWidth: 14, marginTop: 2, border: "2px solid #2b3450", borderTopColor: "#B7B8FF", borderRadius: "50%", display: "inline-block", animation: "spin .7s linear infinite" }} />;
+const dim = (d: boolean): React.CSSProperties => (d ? { opacity: 0.45, cursor: "not-allowed" } : {});
 
 export default function Prover() {
-  const [address, setAddress] = useState<string>("");
+  const [address, setAddress] = useState("");
   const [mode, setMode] = useState<"wallet" | "demo" | "">("");
   const [cred, setCred] = useState<Credential | null>(null);
   const [credMeta, setCredMeta] = useState<any>(null);
-  const [busy, setBusy] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [scope] = useState<string>(freshScope());
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+  const [scope] = useState(freshScope());
   const [att, setAtt] = useState<{ ledger?: number; nullifier: string; hash: string } | null>(null);
 
   async function onConnect() {
@@ -77,137 +94,114 @@ export default function Prover() {
   }
 
   return (
-    <div className="prover">
-      <HaloCanvas ringN={900} tunnelN={700} cx={0.72} cy={0.4} />
-      <div className="halo-vignette" />
-      <header className="console-nav">
-        <Link to="/" className="nav-brand">
-          <span className="halo-dot" />
-          <span className="wordmark">HALO</span>
-          <span className="nav-tag">live demo</span>
-        </Link>
-        <div className="wallet">
-          {address ? (
-            <span className="pill pill-ok">● {short(address)}{mode === "demo" ? " · demo" : ""}</span>
-          ) : (
-            <>
-              <button className="btn btn-primary" onClick={onConnect}>Connect wallet</button>
-              {hasDemo() && <button className="btn btn-tertiary" onClick={onDemo}>Use demo wallet</button>}
-            </>
-          )}
-          <Link to="/" className="btn-arrow" style={{ marginLeft: 6 }}>← Home</Link>
-        </div>
-      </header>
+    <>
+      <Nav appMode />
+      <div style={{ position: "relative", zIndex: 2, maxWidth: 1180, margin: "0 auto", padding: "clamp(110px,16vh,180px) clamp(22px,5vw,60px) clamp(36px,5vh,60px)" }}>
+        <div style={{ fontFamily: "var(--mono)", fontSize: "clamp(11px,1.05vw,13px)", letterSpacing: ".28em", textTransform: "uppercase", color: "#7B8499", marginBottom: 22 }}>Live demo</div>
+        <h1 style={{ margin: 0, maxWidth: 880, fontFamily: "var(--sans)", fontWeight: 800, fontStretch: "120%", letterSpacing: "-.028em", lineHeight: ".96", fontSize: "clamp(2.2rem,5.4vw,4.6rem)", color: "#E9ECF4" }}>Prove eligibility. Watch the chain learn nothing.</h1>
+        <p style={{ margin: "24px 0 0", maxWidth: 600, fontSize: "clamp(1rem,1.3vw,1.18rem)", lineHeight: 1.55, color: "#A7AFC4" }}>The real testnet app. Your proof is generated by snarkjs in your browser and submitted to Stellar — the ledger records only that your address is eligible, never an attribute.</p>
+      </div>
 
-      <div className="container prover-body page">
-        <div className="prover-hero">
-          <div className="eyebrow">Live demo</div>
-          <h1 className="h1" style={{ fontSize: "clamp(2.2rem,5vw,4.6rem)" }}>Prove eligibility. Watch the chain learn nothing.</h1>
-          <p className="lead" style={{ maxWidth: 620 }}>A guided walkthrough that mirrors the testnet app — proof generated in your browser, verified on Stellar, revealing only that your address is eligible.</p>
-        </div>
+      {/* MAIN CONSOLE */}
+      <section style={{ position: "relative", zIndex: 2 }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 clamp(22px,5vw,60px) clamp(40px,6vh,72px)" }}>
+          <div style={{ border: "1px solid #1b1e34", borderRadius: 10, background: "linear-gradient(180deg,#0b0e1a,#08090f)", overflow: "hidden" }}>
+            {/* console bar */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 22px", borderBottom: "1px solid #14162a", background: "#0A0C16", flexWrap: "wrap" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".2em", color: "#8089a0" }}>PROVE ELIGIBILITY</span>
+              {address ? (
+                <span style={S.pillOk}>● {short(address)} · {mode === "demo" ? "demo" : "wallet"}</span>
+              ) : (
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button style={{ ...S.btnPrimary, padding: "9px 16px", borderRadius: 3 }} onClick={onConnect}>Connect wallet</button>
+                  {hasDemo() && <button style={{ ...S.btnGhost, padding: "9px 16px", borderRadius: 3, fontSize: 12.5 }} onClick={onDemo}>Use demo wallet</button>}
+                </div>
+              )}
+            </div>
 
-        {error && <div className="banner err">{error}</div>}
-        {busy && <div className="banner work"><Spinner /> {busy}</div>}
-
-        <div className="console">
-          <section className="card console-left">
-            <div className="console-head"><span className="mono-label">PROVE ELIGIBILITY</span></div>
-
-            <div className="step">
-              <span className="step-num">1</span>
-              <div className="step-body">
-                <h3 className="h3">Get a credential</h3>
-                <p className="body">A trusted issuer vouches for your attributes once. Birth year, country, and accreditation never leave your device.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 0 }}>
+              {/* LEFT: actions */}
+              <div style={{ padding: "clamp(24px,3vw,38px)", borderRight: "1px solid #14162a" }}>
+                <div style={S.stepRow}><span style={S.stepNum}>1</span><span style={S.stepTitle}>Get a credential</span></div>
+                <p style={S.stepBody}>A trusted issuer vouches for your attributes once. They never leave the device.</p>
                 {!cred ? (
-                  <button className="btn btn-tertiary" disabled={!!busy} onClick={getCredential}>Get credential</button>
+                  <button style={{ ...S.btnGhost, ...dim(!!busy) }} disabled={!!busy} onClick={getCredential}>Get credential</button>
                 ) : (
-                  <div className="kv">
-                    <div className="data-row"><span style={{ color: "var(--muted)" }}>birth year</span><Mono>{credMeta.birthYear}</Mono></div>
-                    <div className="data-row"><span style={{ color: "var(--muted)" }}>country</span><Mono>{COUNTRY_NAMES[credMeta.country] ?? credMeta.country}</Mono></div>
-                    <div className="data-row"><span style={{ color: "var(--muted)" }}>accredited</span><Mono>{credMeta.accredited === "1" ? "yes" : "no"}</Mono></div>
-                    <span className="pill pill-ok" style={{ marginTop: 12 }}>held privately on your device</span>
+                  <div style={{ display: "grid", gap: 9, marginBottom: 6 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed #1A1D2E", paddingBottom: 8 }}><span style={{ color: "#7B8499", fontSize: 12.5 }}>Birth year</span><span style={{ ...S.mono, fontSize: 12.5, color: "#cdd6e6" }}>{credMeta.birthYear}</span></div>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed #1A1D2E", paddingBottom: 8 }}><span style={{ color: "#7B8499", fontSize: 12.5 }}>Country</span><span style={{ ...S.mono, fontSize: 12.5, color: "#cdd6e6" }}>{COUNTRY_NAMES[credMeta.country] ?? credMeta.country}</span></div>
+                    <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: 4 }}><span style={{ color: "#7B8499", fontSize: 12.5 }}>Accredited</span><span style={{ ...S.mono, fontSize: 12.5, color: "#cdd6e6" }}>{credMeta.accredited === "1" ? "yes" : "no"}</span></div>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#34D399", border: "1px solid #0f3b30", background: "rgba(52,211,153,.07)", padding: "5px 11px", borderRadius: 999, width: "fit-content", marginTop: 4 }}>held privately on your device</span>
+                  </div>
+                )}
+
+                <div style={{ height: 1, background: "#14162a", margin: "24px 0" }} />
+
+                <div style={S.stepRow}><span style={S.stepNum}>2</span><span style={S.stepTitle}>Prove &amp; verify on-chain</span></div>
+                <p style={S.stepBody}>Generate a proof that you are <strong style={{ color: "#cdd6e6" }}>18+, accredited, and not in a banned region</strong> — bound to your wallet. No attributes are revealed.</p>
+                <button style={{ ...S.btnPrimary, ...dim(!address || !cred || !!busy) }} disabled={!address || !cred || !!busy} onClick={() => proveAndVerify(scope)}>Prove &amp; verify ↗</button>
+                <p style={{ margin: "12px 0 0", fontSize: 12, color: "#5d6478" }}>{!address ? "Connect a wallet to begin." : !cred ? "Get a credential first." : "Generates a Groth16 proof, then submits to the verifier contract."}</p>
+
+                {busy && (
+                  <div style={{ marginTop: 18, display: "flex", alignItems: "flex-start", gap: 11, background: "rgba(129,140,248,.07)", border: "1px solid #232a48", borderRadius: 8, padding: "13px 15px" }}>
+                    <Spinner /><span style={{ fontSize: 13, lineHeight: 1.5, color: "#c3cafe" }}>{busy}</span>
+                  </div>
+                )}
+                {error && (
+                  <div style={{ marginTop: 18, display: "flex", alignItems: "flex-start", gap: 11, background: "rgba(248,113,113,.08)", border: "1px solid #3a1f23", borderRadius: 8, padding: "13px 15px" }}>
+                    <span style={{ fontSize: 13, lineHeight: 1.5, color: "#fca5a5" }}>{error}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT: what the chain sees */}
+              <div style={{ padding: "clamp(24px,3vw,38px)" }}>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: ".2em", color: "#646b80", marginBottom: 18 }}>WHAT THE CHAIN SEES</div>
+                {!att ? (
+                  <div style={{ border: "1px dashed #1f2740", borderRadius: 8, padding: 22 }}>
+                    <p style={{ margin: "0 0 18px", fontSize: 13.5, lineHeight: 1.6, color: "#8893a7" }}>No attestation yet. After you prove, the ledger records only that your address is eligible — these stay blank.</p>
+                    <div style={{ display: "grid", gap: 10, fontFamily: "var(--mono)", fontSize: 12.5 }}>
+                      {["birth year", "country", "accredited"].map((k) => (
+                        <div key={k} style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: "#6b7288" }}>{k}</span><span style={{ color: "#3a4055" }}>—</span></div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ border: "1px solid #0f3b30", borderRadius: 8, padding: 22, background: "rgba(52,211,153,.04)", animation: "pulseGlow 3s ease-in-out infinite" }}>
+                    <div style={{ fontFamily: "var(--sans)", fontWeight: 800, fontSize: 24, color: "#34D399", letterSpacing: ".2px", marginBottom: 16 }}>✓ Verified</div>
+                    <div style={{ display: "grid", gap: 10, fontFamily: "var(--mono)", fontSize: 12.5 }}>
+                      <div style={S.kvRow}><span style={{ color: "#6b7288" }}>bound to</span><span style={{ color: "#cdd6e6" }}>{short(address, 8)}</span></div>
+                      <div style={S.kvRow}><span style={{ color: "#6b7288" }}>at ledger</span><span style={{ color: "#cdd6e6" }}>{att.ledger ?? "—"}</span></div>
+                      <div style={S.kvRow}><span style={{ color: "#6b7288" }}>scope</span><span style={{ color: "#cdd6e6" }}>{short(scope, 8)}</span></div>
+                      <div style={S.kvRow}><span style={{ color: "#6b7288" }}>nullifier</span><span style={{ color: "#B7B8FF" }}>{short(att.nullifier, 10)}</span></div>
+                      <div style={{ ...S.kvRow, borderTop: "1px dashed #16352b", paddingTop: 10 }}><span style={{ color: "#6b7288" }}>birth year</span><span style={{ color: "#3a4055" }}>— never disclosed</span></div>
+                    </div>
+                    {att.hash && <a href={EXPLORER_TX(att.hash)} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: 18, fontFamily: "var(--mono)", fontSize: 12.5, color: "#34D399", borderBottom: "1px solid #16352b", paddingBottom: 3 }}>View transaction ↗</a>}
                   </div>
                 )}
               </div>
             </div>
-
-            <div className="step">
-              <span className="step-num">2</span>
-              <div className="step-body">
-                <h3 className="h3">Prove &amp; verify on-chain</h3>
-                <p className="body">A Groth16 proof — <strong className="ink">18+, accredited, not in a banned country</strong>, bound to your wallet. No attributes are revealed.</p>
-                <button className="btn btn-primary" disabled={!address || !cred || !!busy} onClick={() => proveAndVerify(scope)}>Prove &amp; verify ↗</button>
-                {!address && <p className="hint">Connect a wallet first.</p>}
-                {address && !cred && <p className="hint">Get a credential first.</p>}
-              </div>
-            </div>
-          </section>
-
-          <section className="console-right">
-            <div className="mono-label" style={{ marginBottom: 14 }}>WHAT THE CHAIN SEES</div>
-            {!att ? (
-              <div className="chain-card pre">
-                <p className="body" style={{ marginTop: 0 }}>Before you prove, the ledger knows nothing. After, it records only a boolean and your address.</p>
-                <div className="data-row"><span style={{ color: "var(--muted)" }}>birth year</span><span style={{ color: "var(--faint)" }}>—</span></div>
-                <div className="data-row"><span style={{ color: "var(--muted)" }}>country</span><span style={{ color: "var(--faint)" }}>—</span></div>
-                <div className="data-row"><span style={{ color: "var(--muted)" }}>accredited</span><span style={{ color: "var(--faint)" }}>—</span></div>
-              </div>
-            ) : (
-              <div className="chain-card verified">
-                <div className="big-ok">✓ Verified</div>
-                <div className="data-row"><span style={{ color: "var(--muted)" }}>bound to</span><Mono>{short(address, 8)}</Mono></div>
-                <div className="data-row"><span style={{ color: "var(--muted)" }}>at ledger</span><Mono>{att.ledger ?? "—"}</Mono></div>
-                <div className="data-row"><span style={{ color: "var(--muted)" }}>scope</span><Mono>{short(scope, 8)}</Mono></div>
-                <div className="data-row"><span style={{ color: "var(--muted)" }}>nullifier</span><span className="mono ink-indigo">{short(att.nullifier, 10)}</span></div>
-                <div className="data-row" style={{ borderBottom: "none" }}><span style={{ color: "var(--muted)" }}>birth year</span><span style={{ color: "var(--faint)" }}>never disclosed</span></div>
-                {att.hash && <a className="btn-arrow ink-green" style={{ borderColor: "#0f3b30", marginTop: 14 }} href={EXPLORER_TX(att.hash)} target="_blank" rel="noreferrer">View transaction ↗</a>}
-              </div>
-            )}
-          </section>
+          </div>
         </div>
+      </section>
 
-        <section className="demos">
-          <div className="mono-label" style={{ marginBottom: 18 }}>MORE DEMOS</div>
-          <div className="demos-grid">
-            <SaleCard address={address} cred={cred} busy={!!busy} setBusy={setBusy} setError={setError} proveAndVerify={proveAndVerify} />
+      {/* SECONDARY DEMOS */}
+      <section style={{ position: "relative", zIndex: 2, background: "#07080F", borderTop: "1px solid #12141f" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(56px,8vh,100px) clamp(22px,5vw,60px)" }}>
+          <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".24em", textTransform: "uppercase", color: "#7B8499", marginBottom: "clamp(30px,4vh,48px)" }}>Go deeper</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: "clamp(14px,1.8vw,20px)" }}>
             <SybilCard address={address} cred={cred} busy={!!busy} setBusy={setBusy} setError={setError} />
             <UnlinkCard address={address} cred={cred} busy={!!busy} setBusy={setBusy} setError={setError} />
+            <SaleCard address={address} cred={cred} busy={!!busy} setBusy={setBusy} setError={setError} proveAndVerify={proveAndVerify} />
             <AuditorCard cred={cred} />
           </div>
-        </section>
-      </div>
+          <p style={{ margin: "clamp(28px,4vh,40px) 0 0", fontSize: 12.5, lineHeight: 1.6, color: "#4f566a", maxWidth: 680 }}>
+            Live on testnet — the proof is generated by snarkjs in your browser and submitted to the halo-verifier contract; duplicate submissions revert with <span style={S.mono}>#6 NullifierUsed</span>.
+          </p>
+        </div>
+      </section>
       <Footer />
-    </div>
-  );
-}
-
-function SaleCard(p: any) {
-  const { address, cred, busy, setBusy, setError, proveAndVerify } = p;
-  const [open, setOpen] = useState<boolean | null>(null);
-  const [boughtHash, setBoughtHash] = useState<string>("");
-  async function refresh() { if (!address) return; try { setOpen(await saleIsOpen()); } catch { setOpen(false); } }
-  useEffect(() => { refresh(); }, [address]);
-  async function unlock() { try { await proveAndVerify(SALE_SCOPE); await refresh(); } catch {} }
-  async function doBuy() {
-    setError(""); setBusy("Buying — signing…");
-    try { const { hash } = await buy(100n); setBoughtHash(hash); }
-    catch (e: any) { setError(e?.message ?? "Buy failed"); } finally { setBusy(""); }
-  }
-  return (
-    <div className="card">
-      <div className="mono-label" style={{ color: "var(--indigo)", marginBottom: 14 }}>GATED SALE</div>
-      <h3 className="h3" style={{ marginBottom: 10 }}>Regulated token sale</h3>
-      <p className="body">Opens only to wallets that hold a Halo attestation for the sale policy — checked on-chain via <Mono>is_verified_for</Mono>.</p>
-      <div style={{ margin: "12px 0" }}>
-        {open === null ? <span className="pill">connect a wallet</span> : open ? <span className="pill pill-ok">● unlocked</span> : <span className="pill pill-lock">🔒 locked</span>}
-      </div>
-      {!open ? (
-        <button className="btn btn-primary" disabled={!address || !cred || busy} onClick={unlock}>Prove to unlock</button>
-      ) : (
-        <button className="btn btn-primary" disabled={busy} onClick={doBuy}>Buy 100 tokens</button>
-      )}
-      {boughtHash && <a className="btn-arrow" style={{ display: "block", marginTop: 12 }} href={EXPLORER_TX(boughtHash)} target="_blank" rel="noreferrer">Purchase tx ↗</a>}
-    </div>
+    </>
   );
 }
 
@@ -226,16 +220,20 @@ function SybilCard(p: any) {
       setBusy("Proving the same identity again…");
       res = await proveHalo(cred, { ...POLICY, scope: s }, address);
       try { await submitVerify(res.proof, res.publicSignalsBig); setSybil((x) => ({ ...x, second: "unexpectedly succeeded" })); }
-      catch (e) { setSybil((x) => ({ ...x, second: isNullifierUsed(e) ? "reverted: nullifier already used 🔒" : `reverted: ${String((e as any)?.message).slice(0, 60)}` })); }
+      catch (e) { setSybil((x) => ({ ...x, second: isNullifierUsed(e) ? "reverted — nullifier already used 🔒" : `reverted: ${String((e as any)?.message).slice(0, 60)}` })); }
     } catch (e: any) { setError(e?.message ?? "demo failed"); } finally { setBusy(""); }
   }
   return (
-    <div className="card">
-      <div className="mono-label" style={{ color: "var(--indigo)", marginBottom: 14 }}>SYBIL RESISTANCE</div>
-      <h3 className="h3" style={{ marginBottom: 10 }}>One person, one action</h3>
-      <p className="body">Claiming twice with the same identity + scope reverts on-chain.</p>
-      <button className="btn btn-primary" style={{ marginTop: 6 }} disabled={!address || !cred || busy} onClick={runSybil}>Run double-claim</button>
-      {sybil.first && <div className="result"><div>① {sybil.first}</div><div>② {sybil.second ?? "…"}</div></div>}
+    <div style={S.demoCard}>
+      <h3 style={S.demoH3}>Sybil resistance</h3>
+      <p style={S.demoP}>Claim twice with the same identity and scope. The second reverts — one person, one action.</p>
+      <button style={{ ...S.demoBtn, ...dim(!address || !cred || busy) }} disabled={!address || !cred || busy} onClick={runSybil}>Run double-claim</button>
+      {sybil.first && (
+        <div style={S.resultBox}>
+          <div style={{ color: "#9aa2b8" }}><span style={{ color: "#34D399" }}>①</span> {sybil.first}</div>
+          <div style={{ color: sybil.second ? "#fca5a5" : "#646b80" }}><span style={{ color: sybil.second ? "#f87171" : "#646b80" }}>②</span> {sybil.second ?? "proving the same identity again…"}</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -255,38 +253,71 @@ function UnlinkCard(p: any) {
     } catch (e: any) { setError(e?.message ?? "demo failed"); } finally { setBusy(""); }
   }
   return (
-    <div className="card">
-      <div className="mono-label" style={{ color: "var(--indigo)", marginBottom: 14 }}>UNLINKABILITY</div>
-      <h3 className="h3" style={{ marginBottom: 10 }}>Two apps, two nullifiers</h3>
-      <p className="body">The same person proving for two apps produces <strong className="ink">unlinkable</strong> nullifiers.</p>
-      <button className="btn btn-primary" style={{ marginTop: 6 }} disabled={!address || !cred || busy} onClick={runUnlink}>Prove for two apps</button>
+    <div style={S.demoCard}>
+      <h3 style={S.demoH3}>Unlinkability</h3>
+      <p style={S.demoP}>Prove for two different apps. The two nullifiers can't be correlated to each other.</p>
+      <button style={{ ...S.demoBtn, ...dim(!address || !cred || busy) }} disabled={!address || !cred || busy} onClick={runUnlink}>Prove for two apps</button>
       {links.a && (
-        <div className="result">
-          <div>app A → <Mono>{short(links.a, 12)}</Mono></div>
-          <div>app B → <Mono>{short(links.b!, 12)}</Mono></div>
-          <span className="pill pill-ok" style={{ marginTop: 8 }}>different &amp; unlinkable</span>
+        <div style={S.resultBox}>
+          <div style={{ color: "#9aa2b8" }}>app A → <span style={{ color: "#B7B8FF" }}>{short(links.a, 12)}</span></div>
+          <div style={{ color: "#9aa2b8" }}>app B → <span style={{ color: "#B7B8FF" }}>{short(links.b!, 12)}</span></div>
+          <span style={{ color: "#34D399", fontSize: 11.5 }}>different &amp; unlinkable</span>
         </div>
       )}
     </div>
   );
 }
 
+function SaleCard(p: any) {
+  const { address, cred, busy, setBusy, setError, proveAndVerify } = p;
+  const [open, setOpen] = useState<boolean | null>(null);
+  const [boughtHash, setBoughtHash] = useState("");
+  async function refresh() { if (!address) return; try { setOpen(await saleIsOpen()); } catch { setOpen(false); } }
+  useEffect(() => { refresh(); }, [address]);
+  async function unlock() { try { await proveAndVerify(SALE_SCOPE); await refresh(); } catch {} }
+  async function doBuy() {
+    setError(""); setBusy("Buying — signing…");
+    try { const { hash } = await buy(100n); setBoughtHash(hash); }
+    catch (e: any) { setError(e?.message ?? "Buy failed"); } finally { setBusy(""); }
+  }
+  return (
+    <div style={S.demoCard}>
+      <h3 style={S.demoH3}>Gated sale</h3>
+      <p style={S.demoP}>A regulated sale that only opens to wallets holding a Halo attestation for its scope.</p>
+      <div style={{ marginBottom: 14 }}>
+        {open === null ? <span style={{ ...S.pillLock, color: "#646b80", borderColor: "#2a3048", background: "transparent" }}>connect a wallet</span>
+          : open ? <span style={S.pillOk}>● unlocked</span>
+            : <span style={S.pillLock}>🔒 locked</span>}
+      </div>
+      {!open ? (
+        <button style={{ ...S.btnPrimary, padding: "10px 16px", borderRadius: 6, fontSize: 12.5, ...dim(!address || !cred || busy) }} disabled={!address || !cred || busy} onClick={unlock}>Prove to unlock</button>
+      ) : (
+        <button style={{ ...S.btnPrimary, background: "#34D399", padding: "10px 16px", borderRadius: 6, fontSize: 12.5, ...dim(busy) }} disabled={busy} onClick={doBuy}>Buy 100 tokens</button>
+      )}
+      {boughtHash && <a href={EXPLORER_TX(boughtHash)} target="_blank" rel="noreferrer" style={{ display: "block", marginTop: 12, fontFamily: "var(--mono)", fontSize: 12, color: "#34D399" }}>purchase tx ↗</a>}
+    </div>
+  );
+}
+
 function AuditorCard({ cred }: any) {
   const [sealed, setSealed] = useState<Sealed | null>(null);
-  const [revealed, setRevealed] = useState<string>("");
+  const [revealed, setRevealed] = useState("");
   function publish() { if (!cred) return; setRevealed(""); setSealed(encryptToAuditor(cred.country)); }
   function decrypt() { if (!sealed) return; setRevealed(auditorDecrypt(sealed, AUDITOR_SECRET) ?? "(could not decrypt)"); }
   return (
-    <div className="card">
-      <div className="mono-label" style={{ color: "var(--indigo)", marginBottom: 14 }}>AUDITOR VIEW-KEY</div>
-      <h3 className="h3" style={{ marginBottom: 10 }}>Selective disclosure</h3>
-      <p className="body">Encrypt one attribute to the auditor's key. The public sees only ciphertext; only the auditor can read it.</p>
-      <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
-        <button className="btn btn-primary" disabled={!cred} onClick={publish}>Publish</button>
-        <button className="btn btn-tertiary" disabled={!sealed} onClick={decrypt}>Decrypt as auditor</button>
+    <div style={S.demoCard}>
+      <h3 style={S.demoH3}>Auditor view-key</h3>
+      <p style={S.demoP}>Encrypt one attribute to the auditor's key. The public sees only ciphertext; only the auditor can read it.</p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button style={{ ...S.btnPrimary, padding: "10px 16px", borderRadius: 6, fontSize: 12.5, ...dim(!cred) }} disabled={!cred} onClick={publish}>Publish</button>
+        <button style={{ ...S.demoBtn, ...dim(!sealed) }} disabled={!sealed} onClick={decrypt}>Decrypt as auditor</button>
       </div>
-      {sealed && <div className="result"><div className="mono" style={{ color: "var(--muted)" }}>public sees: {sealed.box.slice(0, 32)}…</div></div>}
-      {revealed && <div className="result ink-green" style={{ fontWeight: 700 }}>country = {COUNTRY_NAMES[revealed] ?? revealed}</div>}
+      {sealed && (
+        <div style={S.resultBox}>
+          <div style={{ color: "#646b80" }}>public sees: {sealed.box.slice(0, 30)}…</div>
+          {revealed && <div style={{ color: "#34D399" }}>auditor reads: country = {COUNTRY_NAMES[revealed] ?? revealed}</div>}
+        </div>
+      )}
     </div>
   );
 }

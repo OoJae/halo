@@ -8,16 +8,18 @@ const LINKS = [
   { to: "/manifesto", label: "MANIFESTO" },
 ];
 
-export default function Nav() {
-  const [scrolled, setScrolled] = useState(false);
+// appMode: the /app (prover) chrome — solid bar, "← Home" instead of "Launch the prover".
+export default function Nav({ appMode = false }: { appMode?: boolean }) {
+  const [scrolled, setScrolled] = useState(appMode);
   useEffect(() => {
+    if (appMode) return;
     const onScroll = () => setScrolled(window.scrollY > 36);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [appMode]);
   return (
-    <nav className={`nav${scrolled ? " scrolled" : ""}`}>
+    <nav className={`nav${scrolled || appMode ? " scrolled" : ""}`}>
       <Link to="/" className="nav-brand">
         <span className="halo-dot" />
         <span className="wordmark">HALO</span>
@@ -30,7 +32,11 @@ export default function Nav() {
           </NavLink>
         ))}
       </div>
-      <Link to="/app" className="btn btn-primary">Launch the prover ↗</Link>
+      {appMode ? (
+        <Link to="/" style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".04em", color: "#9aa2b8", border: "1px solid #2a3048", padding: "9px 16px", borderRadius: 2 }}>← Home</Link>
+      ) : (
+        <Link to="/app" className="btn btn-primary">Launch the prover ↗</Link>
+      )}
     </nav>
   );
 }
